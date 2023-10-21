@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/asendia/salmonping/db"
-	"github.com/jackc/pgx/v5"
 )
 
 func routePing(w http.ResponseWriter, r *http.Request) {
@@ -25,50 +24,25 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare DB connection
 	ctx := r.Context()
-	config, err := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
+	tx, conn, _, message, err := prepareDBConn(ctx)
+	if conn != nil {
+		defer conn.Close(ctx)
+	}
+	if tx != nil {
+		// Commit everything
+		defer tx.Commit(ctx)
+	}
 	if err != nil {
 		j, _ := logJson(map[string]interface{}{
 			"level":   "error",
 			"error":   err.Error(),
-			"message": "Error parsing database URL",
+			"message": message,
 		})
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(j))
 		return
 	}
-	pgxConnString := config.ConnString()
-
-	// Connect to DB
-	conn, err := pgx.Connect(ctx, pgxConnString)
-	if err != nil {
-		j, _ := logJson(map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": "Error connecting to database",
-		})
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(j))
-		return
-	}
-	defer conn.Close(ctx)
-
-	// Start transaction
-	tx, err := conn.Begin(ctx)
-	if err != nil {
-		j, _ := logJson(map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": "Error starting transaction",
-		})
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(j))
-		return
-	}
-	// Commit anything
-	defer tx.Commit(ctx)
 	queries := db.New(tx)
 
 	listings, err := queries.SelectListings(ctx)

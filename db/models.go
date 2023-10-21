@@ -9,24 +9,24 @@ import (
 )
 
 type OnlineListing struct {
-	ID        pgtype.UUID
-	CreatedAt pgtype.Timestamptz
-	Name      string
-	Platform  string
-	Url       string
+	ID        pgtype.UUID        `json:"id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	Name      string             `json:"name"`
+	Platform  string             `json:"platform"`
+	Url       string             `json:"url"`
 }
 
 type SalmonPing struct {
-	ID              pgtype.UUID
-	CreatedAt       pgtype.Timestamptz
-	Status          string
-	OnlineListingID pgtype.UUID
+	ID              pgtype.UUID        `json:"id"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	Status          string             `json:"status"`
+	OnlineListingID pgtype.UUID        `json:"online_listing_id"`
 }
 
 type Schedule struct {
-	ID              pgtype.UUID
-	OnlineListingID pgtype.UUID
-	DayOfWeek       int32
-	OpeningTime     pgtype.Time
-	ClosingTime     pgtype.Time
+	ID              pgtype.UUID `json:"id"`
+	OnlineListingID pgtype.UUID `json:"online_listing_id"`
+	DayOfWeek       int32       `json:"day_of_week"`
+	OpeningTime     pgtype.Time `json:"opening_time"`
+	ClosingTime     pgtype.Time `json:"closing_time"`
 }

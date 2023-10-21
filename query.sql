@@ -57,3 +57,22 @@ ON
 WHERE
     ol.id = $1
     AND s.day_of_week = $2;
+
+-- name: SelectOnlineListingPings :many
+SELECT
+    sp.created_at,
+    sp.status,
+    ol.name,
+    ol.platform,
+    ol.url
+FROM salmon_ping sp
+JOIN online_listing ol
+ON
+    sp.online_listing_id = ol.id
+WHERE
+    sp.created_at >= @start_date
+    AND sp.created_at <= @end_date
+ORDER BY sp.created_at DESC
+LIMIT $1
+OFFSET $2;
+    

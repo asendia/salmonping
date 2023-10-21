@@ -13,6 +13,7 @@ func main() {
 	godotenv.Load()
 	log.Print("starting server...")
 	http.HandleFunc("/api/ping", routePing)
+	http.HandleFunc("/api/history", routeHistory)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
