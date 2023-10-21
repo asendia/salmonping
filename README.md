@@ -8,13 +8,14 @@ Online listing status checker by Salmon Fit
 ## Setup
 ```sh
 cp .env-template .env
-# Then update the variable accordingly
+# Then update variables accordingly
 ```
 
 ## Run
 ```sh
 go run .
-# Run at http://localhost:8080/api/ping
+
+curl -H "X-API-Key: api_key" http://localhost:8080/api/ping
 ```
 
 ## Sqlc

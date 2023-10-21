@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -11,6 +10,20 @@ import (
 )
 
 func routePing(w http.ResponseWriter, r *http.Request) {
+	// Check API key
+	apiKey := r.Header.Get("X-API-Key")
+	if apiKey != os.Getenv("API_KEY") {
+		j, _ := logJson(map[string]interface{}{
+			"level":   "warning",
+			"message": "Invalid API key",
+		})
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, string(j))
+		return
+	}
+
+	// Prepare DB connection
 	ctx := r.Context()
 	config, err := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
 	if err != nil {
@@ -20,11 +33,13 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			"message": "Error parsing database URL",
 		})
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(j))
 		return
 	}
 	pgxConnString := config.ConnString()
-	log.Print(pgxConnString)
+
+	// Connect to DB
 	conn, err := pgx.Connect(ctx, pgxConnString)
 	if err != nil {
 		j, _ := logJson(map[string]interface{}{
@@ -33,10 +48,13 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			"message": "Error connecting to database",
 		})
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(j))
 		return
 	}
 	defer conn.Close(ctx)
+
+	// Start transaction
 	tx, err := conn.Begin(ctx)
 	if err != nil {
 		j, _ := logJson(map[string]interface{}{
@@ -45,12 +63,14 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			"message": "Error starting transaction",
 		})
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(j))
 		return
 	}
 	// Commit anything
 	defer tx.Commit(ctx)
 	queries := db.New(tx)
+
 	listings, err := queries.SelectListings(ctx)
 	if err != nil {
 		j, _ := logJson(map[string]interface{}{
@@ -59,10 +79,12 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			"message": "Error selecting listings",
 		})
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprint(w, string(j))
 		return
 	}
 
+	// Scrape all listings
 	for _, ol := range listings {
 		logJson(map[string]interface{}{
 			"level":      "info",
@@ -100,6 +122,8 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			"restaurant": ol.Name,
 			"status":     status,
 		})
+
+		// Log to database
 		_, err = queries.InsertPing(ctx, db.InsertPingParams{
 			OnlineListingID: ol.ID,
 			Status:          status,
@@ -115,5 +139,6 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 		}
 		// currentTime := time.Now().UTC().Add(time.Hour * 7)
 	}
-	fmt.Fprintf(w, "Success")
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"message": "ok"}`)
 }
