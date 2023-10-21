@@ -39,9 +39,12 @@ echo -n "PUT_THE_API_KEY_HERE" | \
 echo -n "PUT_THE_DATABASE_URL_HERE" | \
   gcloud secrets create "salmonping_DATABASE_URL" --replication-policy "automatic" --data-file -
 
-# Create a service account and allow access to secret manager
+# Create a service account and allow access to secret manager & cloud storage
 gcloud iam service-accounts create SERVICE_ACCOUNT_NAME
-gcloud projects add-iam-policy-binding SERVICE_ACCOUNT_NAME --member='serviceAccount:SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com' --role='roles/secretmanager.secretAccessor'
+gcloud projects add-iam-policy-binding SERVICE_ACCOUNT_NAME \
+  --member='serviceAccount:SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com' \
+  --role='roles/secretmanager.secretAccessor' \
+  --role='roles/storage.objectCreator'
 
 # Deploy cloud run
 gcloud run deploy salmonping --source . \
@@ -73,4 +76,10 @@ for hour in {8..21}; do
         gcloud scheduler jobs create http $job_name --schedule="$schedule" --location="asia-southeast1" --time-zone="Asia/Jakarta" --uri=$ENDPOINT_URL --http-method=GET --headers=X-API-Key=$API_KEY
     done
 done
+
+# Create a cloud storage to debug html
+gsutil mb -l ASIA-SOUTHEAST1 gs://YOUR_BUCKET_NAME/
+gsutil lifecycle set gcs-lifecycle-config.json gs://YOUR_BUCKET_NAME/
+# Verify
+gsutil lifecycle get gs://YOUR_BUCKET_NAME/
 ```

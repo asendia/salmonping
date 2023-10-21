@@ -5,6 +5,9 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http"
+	"path"
+	"strconv"
+	"time"
 
 	"github.com/andybalholm/brotli"
 )
@@ -25,11 +28,16 @@ func getGofoodStatus(url string) (string, error) {
 		return "closed", nil
 	} else {
 		logJson(map[string]interface{}{
-			"level": "error",
-			"error": "Unknown status",
-			"body":  string(body),
-			"url":   url,
+			"level":  "error",
+			"error":  "Unknown status",
+			"header": resp.Header,
+			"url":    url,
 		})
+		// Store the body in Cloud Storage
+		// Create objectname with this format dump/2023/12/25/grabfood_21_05.html
+		now := time.Now()
+		objectName := path.Join("dump", strconv.Itoa(now.Year()), strconv.Itoa(int(now.Month())), strconv.Itoa(now.Day()), "gofood_"+strconv.Itoa(now.Hour())+"_"+strconv.Itoa(now.Minute())+".html")
+		writeToCloudStorage("salmonping", objectName, body)
 		return "unknown", nil
 	}
 }
@@ -84,12 +92,11 @@ func getGrabfoodStatus(url string) (string, error) {
 	} else if bytes.Contains(body, []byte("Jam Buka</label>")) {
 		return "open", nil
 	} else {
-		logJson(map[string]interface{}{
-			"level": "error",
-			"error": "Unknown status",
-			"body":  string(body),
-			"url":   url,
-		})
+		// Store the body in Cloud Storage
+		// Create objectname with this format dump/2023/12/25/grabfood_21_05.html
+		now := time.Now()
+		objectName := path.Join("dump", strconv.Itoa(now.Year()), strconv.Itoa(int(now.Month())), strconv.Itoa(now.Day()), "grabfood_"+strconv.Itoa(now.Hour())+"_"+strconv.Itoa(now.Minute())+".html")
+		writeToCloudStorage("salmonping", objectName, body)
 		return "unknown", nil
 	}
 }
