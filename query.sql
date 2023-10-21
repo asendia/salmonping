@@ -72,6 +72,7 @@ ON
 WHERE
     sp.created_at >= @start_date
     AND sp.created_at <= @end_date
+    AND sp.status = ANY(@statuses::text[])
 ORDER BY sp.created_at DESC
 LIMIT $1
 OFFSET $2;

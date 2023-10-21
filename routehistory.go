@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/asendia/salmonping/db"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// /api/history?page=1&start=2021-01-01&end=2021-01-31
+// /api/history?page=1&start=2021-01-01&end=2021-01-31&status=closed,unknown
 func routeHistory(w http.ResponseWriter, r *http.Request) {
 	// Only allow API calls from salmonfit.com & salmonfit.id
 	origin := r.Header.Get("Origin")
@@ -99,6 +100,12 @@ func routeHistory(w http.ResponseWriter, r *http.Request) {
 		// Reset to 23:59:59
 		endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 0, loc)
 	}
+	status := r.URL.Query().Get("status")
+	// Split status by ","
+	if status == "" {
+		status = "open,closed,unknown"
+	}
+	statuses := strings.Split(status, ",")
 
 	var pgStartDate, pgEndDate pgtype.Timestamptz
 	pgStartDate.Time = startDate
@@ -110,6 +117,7 @@ func routeHistory(w http.ResponseWriter, r *http.Request) {
 		Limit:     limit,
 		Offset:    offset,
 		StartDate: pgStartDate,
+		Statuses:  statuses,
 	})
 	if err != nil {
 		j, _ := logJson(map[string]interface{}{

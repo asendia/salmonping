@@ -18,6 +18,10 @@ For the database I use https://neon.tech/
 ```sh
 go run .
 
+# Get History API used by salmonfit.com
+curl -H "Origin: http://localhost:5173" http://localhost:8080/api/history
+
+# Ping API
 curl -H "X-API-Key: api_key" http://localhost:8080/api/ping
 ```
 
