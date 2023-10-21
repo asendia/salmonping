@@ -1,0 +1,25 @@
+steps:
+  - id: deploy-api
+    name: gcr.io/cloud-builders/gcloud
+    waitFor:
+      - build-api
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        gcloud run deploy salmonping --source . \
+          --allow-unauthenticated \
+          --concurrency 16 \
+          --cpu 1 \
+          --max-instances 5 \
+          --memory 128Mi \
+          --min-instances 0 \
+          --region=asia-southeast1 \
+          --service-account salmonping@salmonping.iam.gserviceaccount.com \
+          --set-secrets API_KEY=salmonping_API_KEY:latest \
+          --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
+          --tag=main \
+          --timeout 15s \
+          --update-labels service=salmonping
+options:
+  logging: CLOUD_LOGGING_ONLY
