@@ -1,8 +1,6 @@
 steps:
   - id: deploy-api
     name: gcr.io/cloud-builders/gcloud
-    waitFor:
-      - build-api
     entrypoint: bash
     args:
       - '-c'
