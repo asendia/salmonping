@@ -50,6 +50,37 @@ func (q *Queries) InsertListing(ctx context.Context, arg InsertListingParams) (S
 	return i, err
 }
 
+const insertOnlineListing = `-- name: InsertOnlineListing :one
+INSERT INTO online_listing (
+  name,
+  platform,
+  url
+) VALUES (
+  $1,
+  $2,
+  $3
+) RETURNING id, created_at, name, platform, url
+`
+
+type InsertOnlineListingParams struct {
+	Name     string `json:"name"`
+	Platform string `json:"platform"`
+	Url      string `json:"url"`
+}
+
+func (q *Queries) InsertOnlineListing(ctx context.Context, arg InsertOnlineListingParams) (OnlineListing, error) {
+	row := q.db.QueryRow(ctx, insertOnlineListing, arg.Name, arg.Platform, arg.Url)
+	var i OnlineListing
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.Name,
+		&i.Platform,
+		&i.Url,
+	)
+	return i, err
+}
+
 const insertPing = `-- name: InsertPing :one
 INSERT INTO salmon_ping (
   status,
@@ -73,37 +104,6 @@ func (q *Queries) InsertPing(ctx context.Context, arg InsertPingParams) (SalmonP
 		&i.CreatedAt,
 		&i.Status,
 		&i.OnlineListingID,
-	)
-	return i, err
-}
-
-const insertRestaurant = `-- name: InsertRestaurant :one
-INSERT INTO online_listing (
-  name,
-  platform,
-  url
-) VALUES (
-  $1,
-  $2,
-  $3
-) RETURNING id, created_at, name, platform, url
-`
-
-type InsertRestaurantParams struct {
-	Name     string `json:"name"`
-	Platform string `json:"platform"`
-	Url      string `json:"url"`
-}
-
-func (q *Queries) InsertRestaurant(ctx context.Context, arg InsertRestaurantParams) (OnlineListing, error) {
-	row := q.db.QueryRow(ctx, insertRestaurant, arg.Name, arg.Platform, arg.Url)
-	var i OnlineListing
-	err := row.Scan(
-		&i.ID,
-		&i.CreatedAt,
-		&i.Name,
-		&i.Platform,
-		&i.Url,
 	)
 	return i, err
 }
@@ -146,8 +146,10 @@ func (q *Queries) SelectListings(ctx context.Context) ([]OnlineListing, error) {
 
 const selectOnlineListingPings = `-- name: SelectOnlineListingPings :many
 SELECT
+    sp.id AS salmon_ping_id,
     sp.created_at,
     sp.status,
+    ol.id AS online_listing_id,
     ol.name,
     ol.platform,
     ol.url
@@ -173,11 +175,13 @@ type SelectOnlineListingPingsParams struct {
 }
 
 type SelectOnlineListingPingsRow struct {
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	Status    string             `json:"status"`
-	Name      string             `json:"name"`
-	Platform  string             `json:"platform"`
-	Url       string             `json:"url"`
+	SalmonPingID    pgtype.UUID        `json:"salmon_ping_id"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	Status          string             `json:"status"`
+	OnlineListingID pgtype.UUID        `json:"online_listing_id"`
+	Name            string             `json:"name"`
+	Platform        string             `json:"platform"`
+	Url             string             `json:"url"`
 }
 
 func (q *Queries) SelectOnlineListingPings(ctx context.Context, arg SelectOnlineListingPingsParams) ([]SelectOnlineListingPingsRow, error) {
@@ -196,8 +200,10 @@ func (q *Queries) SelectOnlineListingPings(ctx context.Context, arg SelectOnline
 	for rows.Next() {
 		var i SelectOnlineListingPingsRow
 		if err := rows.Scan(
+			&i.SalmonPingID,
 			&i.CreatedAt,
 			&i.Status,
+			&i.OnlineListingID,
 			&i.Name,
 			&i.Platform,
 			&i.Url,
@@ -214,7 +220,7 @@ func (q *Queries) SelectOnlineListingPings(ctx context.Context, arg SelectOnline
 
 const selectOnlineListingSchedules = `-- name: SelectOnlineListingSchedules :many
 SELECT
-    ol.id,
+    ol.id AS online_listing_id,
     ol.created_at,
     ol.name,
     ol.platform,
@@ -225,30 +231,25 @@ SELECT
 FROM online_listing ol
 JOIN schedule s
 ON
-    ol.id = s.restaurant_id
+    ol.id = s.online_listing_id
 WHERE
-    ol.id = $1
-    AND s.day_of_week = $2
+    s.day_of_week = $1
+ORDER BY s.opening_time ASC
 `
 
-type SelectOnlineListingSchedulesParams struct {
-	ID        pgtype.UUID `json:"id"`
-	DayOfWeek int32       `json:"day_of_week"`
-}
-
 type SelectOnlineListingSchedulesRow struct {
-	ID          pgtype.UUID        `json:"id"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	Name        string             `json:"name"`
-	Platform    string             `json:"platform"`
-	Url         string             `json:"url"`
-	DayOfWeek   int32              `json:"day_of_week"`
-	OpeningTime pgtype.Time        `json:"opening_time"`
-	ClosingTime pgtype.Time        `json:"closing_time"`
+	OnlineListingID pgtype.UUID        `json:"online_listing_id"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	Name            string             `json:"name"`
+	Platform        string             `json:"platform"`
+	Url             string             `json:"url"`
+	DayOfWeek       int32              `json:"day_of_week"`
+	OpeningTime     pgtype.Time        `json:"opening_time"`
+	ClosingTime     pgtype.Time        `json:"closing_time"`
 }
 
-func (q *Queries) SelectOnlineListingSchedules(ctx context.Context, arg SelectOnlineListingSchedulesParams) ([]SelectOnlineListingSchedulesRow, error) {
-	rows, err := q.db.Query(ctx, selectOnlineListingSchedules, arg.ID, arg.DayOfWeek)
+func (q *Queries) SelectOnlineListingSchedules(ctx context.Context, dayOfWeek int32) ([]SelectOnlineListingSchedulesRow, error) {
+	rows, err := q.db.Query(ctx, selectOnlineListingSchedules, dayOfWeek)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +258,7 @@ func (q *Queries) SelectOnlineListingSchedules(ctx context.Context, arg SelectOn
 	for rows.Next() {
 		var i SelectOnlineListingSchedulesRow
 		if err := rows.Scan(
-			&i.ID,
+			&i.OnlineListingID,
 			&i.CreatedAt,
 			&i.Name,
 			&i.Platform,

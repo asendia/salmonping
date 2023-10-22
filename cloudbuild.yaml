@@ -1,6 +1,15 @@
 steps:
+  - id: test-api
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        go test ./... -v
   - id: deploy-api
     name: gcr.io/cloud-builders/gcloud
+    waitFor:
+      - test-api
     entrypoint: bash
     args:
       - '-c'

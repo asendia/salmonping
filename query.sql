@@ -1,4 +1,4 @@
--- name: InsertRestaurant :one
+-- name: InsertOnlineListing :one
 INSERT INTO online_listing (
   name,
   platform,
@@ -42,7 +42,7 @@ FROM online_listing ol;
 
 -- name: SelectOnlineListingSchedules :many
 SELECT
-    ol.id,
+    ol.id AS online_listing_id,
     ol.created_at,
     ol.name,
     ol.platform,
@@ -53,15 +53,17 @@ SELECT
 FROM online_listing ol
 JOIN schedule s
 ON
-    ol.id = s.restaurant_id
+    ol.id = s.online_listing_id
 WHERE
-    ol.id = $1
-    AND s.day_of_week = $2;
+    s.day_of_week = $1
+ORDER BY s.opening_time ASC;
 
 -- name: SelectOnlineListingPings :many
 SELECT
+    sp.id AS salmon_ping_id,
     sp.created_at,
     sp.status,
+    ol.id AS online_listing_id,
     ol.name,
     ol.platform,
     ol.url

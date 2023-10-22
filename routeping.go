@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/asendia/salmonping/db"
 )
@@ -22,7 +24,6 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Prepare DB connection
 	ctx := r.Context()
 	tx, conn, _, message, err := prepareDBConn(ctx)
 	if conn != nil {
@@ -57,17 +58,28 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(j))
 		return
 	}
+	scrapeListings(ctx, queries, listings)
 
-	// Initiate slice of db.SelectOnlineListingPingsRow
-	var listingPings []db.SelectOnlineListingPingsRow
+	err = verifyPingAndSendAlert(ctx, queries)
+	if err != nil {
+		logJson(map[string]interface{}{
+			"level":   "warning",
+			"error":   err.Error(),
+			"message": "Failed to send Telegram alert",
+		})
+	}
 
-	// Scrape all listings
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"message": "ok"}`)
+}
+
+func scrapeListings(ctx context.Context, queries *db.Queries, listings []db.OnlineListing) {
 	for _, ol := range listings {
 		logJson(map[string]interface{}{
-			"level":      "info",
-			"message":    "Scraping a restaurant",
-			"restaurant": ol.Name,
-			"url":        ol.Url,
+			"level":   "info",
+			"message": "Scraping a listing",
+			"listing": ol.Name,
+			"url":     ol.Url,
 		})
 		var status string
 		var err error
@@ -77,61 +89,79 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			status, err = getGrabfoodStatus(ol.Url)
 		} else {
 			logJson(map[string]interface{}{
-				"level":      "error",
-				"message":    "Unsupported restaurant url",
-				"restaurant": ol.Name,
-				"url":        ol.Url,
+				"level":   "error",
+				"message": "Unsupported url",
+				"listing": ol.Name,
+				"url":     ol.Url,
 			})
 			continue
 		}
 		if err != nil {
 			logJson(map[string]interface{}{
-				"level":      "error",
-				"message":    "Error scraping a restaurant",
-				"restaurant": ol.Name,
-				"error":      err.Error(),
+				"level":   "error",
+				"message": "Error scraping a listing",
+				"listing": ol.Name,
+				"error":   err.Error(),
 			})
 			continue
 		}
 
 		logJson(map[string]interface{}{
-			"level":      "info",
-			"restaurant": ol.Name,
-			"status":     status,
+			"level":   "info",
+			"listing": ol.Name,
+			"status":  status,
 		})
 
 		// Log to database
-		p, err := queries.InsertPing(ctx, db.InsertPingParams{
+		_, err = queries.InsertPing(ctx, db.InsertPingParams{
 			OnlineListingID: ol.ID,
 			Status:          status,
 		})
-		listingPings = append(listingPings, db.SelectOnlineListingPingsRow{
-			CreatedAt: p.CreatedAt,
-			Name:      ol.Name,
-			Status:    p.Status,
-			Platform:  ol.Platform,
-			Url:       ol.Url,
-		})
 		if err != nil {
 			logJson(map[string]interface{}{
-				"level":      "error",
-				"message":    "Error inserting a ping",
-				"restaurant": ol.Name,
-				"error":      err.Error(),
+				"level":   "error",
+				"message": "Error inserting a ping",
+				"listing": ol.Name,
+				"error":   err.Error(),
 			})
 			continue
 		}
 	}
+}
 
-	err = sendTelegramAlert(listingPings)
+func verifyPingAndSendAlert(ctx context.Context, queries *db.Queries) error {
+	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	if botToken == "" {
+		return fmt.Errorf("TELEGRAM_BOT_TOKEN is not set")
+	}
+	chatID, err := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
 	if err != nil {
-		logJson(map[string]interface{}{
-			"level":   "warning",
-			"error":   err.Error(),
-			"message": "Cannot send Telegram alert",
-		})
+		return err
+	}
+	schedules, err := getTodaySchedules(ctx, queries)
+	if err != nil {
+		return err
+	}
+	listingPings, err := getTodayPings(ctx, queries)
+	if err != nil {
+		return err
+	}
+	anomalies := getPingAnomalies(schedules, listingPings)
+	if len(anomalies) == 0 {
+		return nil
+	}
+	text := "🚨🚨 Anomaly detected 🚨🚨\n\n"
+	// Check if current ping status is different from previous ping status
+	// If different, send message to Telegram
+	for num, row := range anomalies {
+		// Check if row.Name key exists in currentListingPingMap
+		text += fmt.Sprintf("%d. %s [%s](%s)\n", num+1, storeStatusToEmoji(row.Status), row.Name, row.Url)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"message": "ok"}`)
+	// Send message
+	err = sendTelegramMessage(botToken, chatID, text)
+	if err != nil {
+		return err
+	}
+	return nil
 }

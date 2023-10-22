@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -30,4 +31,13 @@ func prepareDBConn(ctx context.Context) (tx pgx.Tx, conn *pgx.Conn, config *pgx.
 		return
 	}
 	return
+}
+
+// Helper function to convert time.Time into microseconds since midnight
+func toMicrosSinceMidnight(t time.Time) int64 {
+	hour, min, sec := t.Clock()
+	return int64(hour)*int64(time.Hour/time.Microsecond) +
+		int64(min)*int64(time.Minute/time.Microsecond) +
+		int64(sec)*int64(time.Second/time.Microsecond) +
+		int64(t.Nanosecond())/int64(time.Microsecond)
 }
