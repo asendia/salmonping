@@ -107,11 +107,8 @@ func routeHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	statuses := strings.Split(status, ",")
 
-	var pgStartDate, pgEndDate pgtype.Timestamptz
-	pgStartDate.Time = startDate
-	pgStartDate.Valid = true
-	pgEndDate.Time = endDate
-	pgEndDate.Valid = true
+	pgStartDate := pgtype.Timestamptz{Time: startDate, Valid: true}
+	pgEndDate := pgtype.Timestamptz{Time: endDate, Valid: true}
 	listingPings, err := queries.SelectOnlineListingPings(ctx, db.SelectOnlineListingPingsParams{
 		EndDate:   pgEndDate,
 		Limit:     limit,
