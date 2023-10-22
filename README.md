@@ -30,6 +30,13 @@ curl -H "X-API-Key: api_key" http://localhost:8080/api/ping
 2. Run `sqlc generate`
 3. Files in `db` dir should be updated
 
+
+### Telegram Alert (Optional)
+1. Create a telegram bot: https://core.telegram.org/bots/tutorial to retrieve a bot token, store it as env "TELEGRAM_BOT_TOKEN"
+2. Create a group chat
+3. Invite your bot into the group chat
+4. Run `curl https://api.telegram.org/bot[TELEGRAM_BOT_TOKEN]/getUpdates` to get the chat_id, store it as env "TELEGRAM_CHAT_ID". If it returns empty you can try removing the bot from group chat & add it again.
+
 ## Deployment
 
 ```sh
@@ -38,6 +45,11 @@ echo -n "PUT_THE_API_KEY_HERE" | \
   gcloud secrets create "salmonping_API_KEY" --replication-policy "automatic" --data-file -
 echo -n "PUT_THE_DATABASE_URL_HERE" | \
   gcloud secrets create "salmonping_DATABASE_URL" --replication-policy "automatic" --data-file -
+# Optional
+echo -n "PUT_TELEGRAM_BOT_TOKEN" | \
+  gcloud secrets create "salmonping_TELEGRAM_BOT_TOKEN" --replication-policy "automatic" --data-file -
+echo -n "PUT_TELEGRAM_CHAT_ID" | \
+  gcloud secrets create "salmonping_TELEGRAM_CHAT_ID" --replication-policy "automatic" --data-file -
 
 # Create a service account and allow access to secret manager & cloud storage
 gcloud iam service-accounts create SERVICE_ACCOUNT_NAME
@@ -58,6 +70,9 @@ gcloud run deploy salmonping --source . \
   --service-account SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com \
   --set-secrets API_KEY=salmonping_API_KEY:latest \
   --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
+  # Uncomment if you choose to enable Telegram alert
+  # --set-secrets TELEGRAM_BOT_TOKEN=salmonping_TELEGRAM_BOT_TOKEN:latest \
+  # --set-secrets TELEGRAM_CHAT_ID=salmonping_TELEGRAM_CHAT_ID:latest \
   --tag=main \
   --timeout 15s \
   --update-labels service=salmonping

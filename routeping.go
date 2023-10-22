@@ -58,6 +58,9 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Initiate slice of db.SelectOnlineListingPingsRow
+	var listingPings []db.SelectOnlineListingPingsRow
+
 	// Scrape all listings
 	for _, ol := range listings {
 		logJson(map[string]interface{}{
@@ -98,9 +101,16 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 		})
 
 		// Log to database
-		_, err = queries.InsertPing(ctx, db.InsertPingParams{
+		p, err := queries.InsertPing(ctx, db.InsertPingParams{
 			OnlineListingID: ol.ID,
 			Status:          status,
+		})
+		listingPings = append(listingPings, db.SelectOnlineListingPingsRow{
+			CreatedAt: p.CreatedAt,
+			Name:      ol.Name,
+			Status:    p.Status,
+			Platform:  ol.Platform,
+			Url:       ol.Url,
 		})
 		if err != nil {
 			logJson(map[string]interface{}{
@@ -111,8 +121,17 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 			})
 			continue
 		}
-		// currentTime := time.Now().UTC().Add(time.Hour * 7)
 	}
+
+	err = sendTelegramAlert(listingPings)
+	if err != nil {
+		logJson(map[string]interface{}{
+			"level":   "warning",
+			"error":   err.Error(),
+			"message": "Cannot send Telegram alert",
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"message": "ok"}`)
 }
