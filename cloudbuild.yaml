@@ -1,6 +1,6 @@
 steps:
-  - id: test-api
-    name: gcr.io/cloud-builders/gcloud
+  - id: test
+    name: golang:latest
     entrypoint: bash
     args:
       - '-c'
@@ -9,7 +9,7 @@ steps:
   - id: deploy-api
     name: gcr.io/cloud-builders/gcloud
     waitFor:
-      - test-api
+      - test
     entrypoint: bash
     args:
       - '-c'
