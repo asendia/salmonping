@@ -85,9 +85,11 @@ func routeHistory(w http.ResponseWriter, r *http.Request) {
 		startDate, err = time.ParseInLocation("2006-01-02", startStr, loc)
 	}
 	if startStr == "" || err != nil {
-		startDate = time.Now().Add(-24 * time.Hour)
+		startDate = time.Now().In(loc)
 		// Reset to 00:00:00
 		startDate = time.Date(startDate.Year(), startDate.Month(), startDate.Day(), 0, 0, 0, 0, loc)
+		// Minues 7 days
+		startDate = startDate.AddDate(0, 0, -7)
 	}
 	// Parse date from query string "end" if available
 	endStr := r.URL.Query().Get("end")
@@ -96,10 +98,12 @@ func routeHistory(w http.ResponseWriter, r *http.Request) {
 		endDate, err = time.ParseInLocation("2006-01-02", endStr, loc)
 	}
 	if endStr == "" || err != nil {
-		endDate = time.Now()
-		// Reset to 23:59:59
-		endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 0, loc)
+		endDate = time.Now().In(loc)
+		// Reset to 00:00:00
+		endDate = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 0, 0, 0, 0, loc)
 	}
+	// Add 1 day to endDate
+	endDate = endDate.Add(24 * time.Hour)
 	status := r.URL.Query().Get("status")
 	// Split status by ","
 	if status == "" {
