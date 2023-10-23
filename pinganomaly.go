@@ -71,11 +71,13 @@ func getTodayPings(ctx context.Context, queries *db.Queries) ([]db.SelectOnlineL
 	}
 	today := time.Now().In(loc)
 	today = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, loc)
+	tomorrow := today.AddDate(0, 0, 1)
 	listingPings, err := queries.SelectOnlineListingPings(ctx, db.SelectOnlineListingPingsParams{
 		Limit:     100,
 		Offset:    0,
 		StartDate: pgtype.Timestamptz{Time: today, Valid: true},
-		EndDate:   pgtype.Timestamptz{Time: time.Now().In(loc), Valid: true},
+		EndDate:   pgtype.Timestamptz{Time: tomorrow, Valid: true},
+		Statuses:  []string{"open", "closed", "unknown"},
 	})
 	return listingPings, err
 }

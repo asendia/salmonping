@@ -159,7 +159,7 @@ ON
     sp.online_listing_id = ol.id
 WHERE
     sp.created_at >= $3
-    AND sp.created_at <= $4
+    AND sp.created_at < $4
     AND sp.status = ANY($5::text[])
 ORDER BY sp.created_at DESC
 LIMIT $1
