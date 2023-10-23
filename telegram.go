@@ -39,16 +39,3 @@ func sendTelegramMessage(token string, chatID int64, text string) error {
 	}
 	return nil
 }
-
-func storeStatusToEmoji(status string) string {
-	switch status {
-	case "open":
-		return "✅"
-	case "closed":
-		return "🚫"
-	case "unknown":
-		return "❓"
-	default:
-		return "❓"
-	}
-}

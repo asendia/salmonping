@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"io"
 	"net/http"
 	"path"
@@ -10,7 +11,69 @@ import (
 	"time"
 
 	"github.com/andybalholm/brotli"
+	"github.com/asendia/salmonping/db"
 )
+
+func fetchListings(ctx context.Context, queries *db.Queries) error {
+	listings, err := queries.SelectListings(ctx)
+	if err != nil {
+		return err
+	}
+	for _, ol := range listings {
+		logJson(map[string]interface{}{
+			"level":   "info",
+			"message": "Scraping a listing",
+			"listing": ol.Name,
+			"url":     ol.Url,
+		})
+		var status string
+		var err error
+		if ol.Platform == "gofood" {
+			status, err = getGofoodStatus(ol.Url)
+		} else if ol.Platform == "grabfood" {
+			status, err = getGrabfoodStatus(ol.Url)
+		} else {
+			logJson(map[string]interface{}{
+				"level":   "error",
+				"message": "Unsupported url",
+				"listing": ol.Name,
+				"url":     ol.Url,
+			})
+			continue
+		}
+		if err != nil {
+			logJson(map[string]interface{}{
+				"level":   "error",
+				"message": "Error scraping a listing",
+				"listing": ol.Name,
+				"error":   err.Error(),
+			})
+			continue
+		}
+
+		logJson(map[string]interface{}{
+			"level":   "info",
+			"listing": ol.Name,
+			"status":  status,
+		})
+
+		// Log to database
+		_, err = queries.InsertPing(ctx, db.InsertPingParams{
+			OnlineListingID: ol.ID,
+			Status:          status,
+		})
+		if err != nil {
+			logJson(map[string]interface{}{
+				"level":   "error",
+				"message": "Error inserting a ping",
+				"listing": ol.Name,
+				"error":   err.Error(),
+			})
+			continue
+		}
+	}
+	return nil
+}
 
 func getGofoodStatus(url string) (string, error) {
 	resp, err := http.Get(url)
