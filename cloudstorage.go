@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"cloud.google.com/go/storage"
 )
@@ -11,7 +11,8 @@ func writeToCloudStorage(bucketName string, objectName string, body []byte) {
 	// Create a new Google Cloud Storage client
 	client, err := storage.NewClient(context.Background())
 	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
+		fmt.Printf("Failed to create client: %v", err)
+		return
 	}
 
 	// Get a handle to the bucket
@@ -23,9 +24,11 @@ func writeToCloudStorage(bucketName string, objectName string, body []byte) {
 	// Write the body to the object
 	wc := obj.NewWriter(context.Background())
 	if _, err := wc.Write(body); err != nil {
-		log.Fatalf("Failed to write object: %v", err)
+		fmt.Printf("Failed to write object: %v", err)
+		return
 	}
 	if err := wc.Close(); err != nil {
-		log.Fatalf("Failed to close writer: %v", err)
+		fmt.Printf("Failed to close writer: %v", err)
+		return
 	}
 }
