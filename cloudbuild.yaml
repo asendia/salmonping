@@ -25,6 +25,7 @@ steps:
           --service-account salmonping@salmonping.iam.gserviceaccount.com \
           --set-secrets API_KEY=salmonping_API_KEY:latest \
           --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
+          --set-secrets GOFOOD_NOTIFICATION_SECRET_KEY=salmonping_GOFOOD_NOTIFICATION_SECRET_KEY \
           --set-secrets TELEGRAM_BOT_TOKEN=salmonping_TELEGRAM_BOT_TOKEN:latest \
           --set-secrets TELEGRAM_CHAT_ID=salmonping_TELEGRAM_CHAT_ID:latest \
           --tag=main \

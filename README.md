@@ -50,6 +50,9 @@ echo -n "PUT_TELEGRAM_BOT_TOKEN" | \
   gcloud secrets create "salmonping_TELEGRAM_BOT_TOKEN" --replication-policy "automatic" --data-file -
 echo -n "PUT_TELEGRAM_CHAT_ID" | \
   gcloud secrets create "salmonping_TELEGRAM_CHAT_ID" --replication-policy "automatic" --data-file -
+# https://developer.gobiz.com/docs/api/webhooks/receiving-notifications
+echo -n "PUT_GOFOOD_NOTIFICATION_SECRET_KEY" | \
+  gcloud secrets create "salmonping_GOFOOD_NOTIFICATION_SECRET_KEY" --replication-policy "automatic" --data-file -
 
 # Create a service account and allow access to secret manager & cloud storage
 gcloud iam service-accounts create SERVICE_ACCOUNT_NAME
@@ -70,6 +73,8 @@ gcloud run deploy salmonping --source . \
   --service-account SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com \
   --set-secrets API_KEY=salmonping_API_KEY:latest \
   --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
+  # Uncomment if you choose to enable Gofood integration
+  # --set-secrets GOFOOD_NOTIFICATION_SECRET_KEY=salmonping_GOFOOD_NOTIFICATION_SECRET_KEY \
   # Uncomment if you choose to enable Telegram alert
   # --set-secrets TELEGRAM_BOT_TOKEN=salmonping_TELEGRAM_BOT_TOKEN:latest \
   # --set-secrets TELEGRAM_CHAT_ID=salmonping_TELEGRAM_CHAT_ID:latest \
@@ -84,7 +89,7 @@ ENDPOINT_URL="PUT_THE_ENDPOINT_URL_HERE"
 # Times you specified
 times=(05 30 55)
 
-for hour in {8..21}; do
+for hour in {10..20}; do
     for minute in "${times[@]}"; do
         job_name="salmonping_ping_${hour}${minute}"
         schedule="${minute} ${hour} * * 1-6"
