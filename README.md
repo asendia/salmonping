@@ -86,16 +86,7 @@ gcloud run deploy salmonping --source . \
 API_KEY="PUT_THE_API_KEY_HERE"
 ENDPOINT_URL="PUT_THE_ENDPOINT_URL_HERE"
 
-# Times you specified
-times=(05 30 55)
-
-for hour in {10..20}; do
-    for minute in "${times[@]}"; do
-        job_name="salmonping_ping_${hour}${minute}"
-        schedule="${minute} ${hour} * * 1-6"
-        gcloud scheduler jobs create http $job_name --schedule="$schedule" --location="asia-southeast1" --time-zone="Asia/Jakarta" --uri=$ENDPOINT_URL --http-method=GET --headers=X-API-Key=$API_KEY
-    done
-done
+gcloud scheduler jobs create http salmonping_ping --schedule="1,9,19,29,39,49,59 * * * *" --location="asia-southeast1" --time-zone="Asia/Jakarta" --uri=$ENDPOINT_URL --http-method=GET --headers="X-API-Key=$API_KEY"
 
 # Create a cloud storage to debug html
 gsutil mb -l ASIA-SOUTHEAST1 gs://YOUR_BUCKET_NAME/

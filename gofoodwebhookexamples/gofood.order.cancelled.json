@@ -1,0 +1,50 @@
+{
+  "header": {
+    "event_name": "gofood.order.cancelled",
+    "version": 1,
+    "timestamp": "2023-10-24T19:46:56.446+07:00",
+    "event_id": "9d4d212a-1dda-3046-9f6e-ba62d00a139e"
+  },
+  "body": {
+    "order": {
+      "order_items": [
+        {
+          "quantity": 1,
+          "name": "Salmon Pizza",
+          "external_id": "menu-item-external-id-test-1",
+          "id": "7b422432-2f0c-478d-b656-6778908582d7",
+          "notes": "",
+          "price": 110000,
+          "variants": [
+            {
+              "id": "8084f090-f45e-47de-b665-787203bd035a",
+              "name": "Tambah Keju",
+              "external_id": "variant-external-id-test-1"
+            }
+          ]
+        }
+      ],
+      "currency": "IDR",
+      "order_number": "F-460335259",
+      "created_at": "2023-10-24T19:46:56.446+07:00",
+      "takeaway_charges": 0,
+      "order_total": 110000,
+      "pin": "5178",
+      "cutlery_requested": null,
+      "status": "CANCELLED",
+      "applied_promotions": []
+    },
+    "driver": {
+      "name": "GoFood Driver"
+    },
+    "outlet": {
+      "external_outlet_id": null,
+      "id": "G1898453S"
+    },
+    "service_type": "gofood",
+    "customer": {
+      "name": "GoFood Customer",
+      "id": "536D5047BBBC0D5C7A51437C28C0221F"
+    }
+  }
+}

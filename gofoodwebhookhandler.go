@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func routeWebhookGofood(w http.ResponseWriter, r *http.Request) {
+func gofoodWebhookHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		logJson(map[string]interface{}{
@@ -25,18 +25,31 @@ func routeWebhookGofood(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logJson(map[string]interface{}{
 			"error":   err.Error(),
-			"level":   "error",
+			"level":   "warning",
 			"message": "Error validating signature",
 		})
+		// Cannot verify signature in sandbox
 		// w.WriteHeader(http.StatusUnauthorized)
 		// w.Header().Set("Content-Type", "application/json")
 		// fmt.Fprintf(w, `{"message": "error"}`)
 		// return
 	}
 
-	// Convert body to json
+	p, err := parseBodyAsGofoodWebhookPayload(bodyBytes)
+	if err != nil {
+		logJson(map[string]interface{}{
+			"body":    string(bodyBytes),
+			"error":   err.Error(),
+			"level":   "error",
+			"message": "Error parsing body",
+		})
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"message": "error"}`)
+		return
+	}
 	log := map[string]interface{}{
-		"body":    writeGofoodWebhookToCloudStorage(bodyBytes),
+		"payload": p,
 		"headers": r.Header,
 		"level":   "info",
 		"message": "Gofood Webhook received",

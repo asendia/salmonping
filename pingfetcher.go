@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"io"
+	"math/rand"
 	"net/http"
 	"path"
 	"strconv"
@@ -14,11 +15,20 @@ import (
 	"github.com/asendia/salmonping/db"
 )
 
+var userAgents = [3]string{
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+}
+
 func fetchListings(ctx context.Context, queries *db.Queries) error {
 	listings, err := queries.SelectListings(ctx)
 	if err != nil {
 		return err
 	}
+	rand.Shuffle(len(userAgents), func(i, j int) { userAgents[i], userAgents[j] = userAgents[j], userAgents[i] })
+
+	grabCounter := 0
 	for _, ol := range listings {
 		logJson(map[string]interface{}{
 			"level":   "info",
@@ -31,7 +41,10 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 		if ol.Platform == "gofood" {
 			status, err = getGofoodStatus(ol.Url)
 		} else if ol.Platform == "grabfood" {
-			status, err = getGrabfoodStatus(ol.Url)
+			// Sleep for 15 seconds to avoid rate limiting
+			time.Sleep(15 * time.Second)
+			status, err = getGrabfoodStatus(ol.Url, userAgents[grabCounter%len(userAgents)])
+			grabCounter++
 		} else {
 			logJson(map[string]interface{}{
 				"level":   "error",
@@ -105,21 +118,20 @@ func getGofoodStatus(url string) (string, error) {
 	}
 }
 
-func getGrabfoodStatus(url string) (string, error) {
+func getGrabfoodStatus(url string, userAgent string) (string, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
-
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0")
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
 	req.Header.Set("Accept-Language", "id,en-US;q=0.7,en;q=0.3")
 	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("Upgrade-Insecure-Requests", "1")
 	req.Header.Set("Sec-Fetch-Dest", "document")
 	req.Header.Set("Sec-Fetch-Mode", "navigate")
-	req.Header.Set("Sec-Fetch-Site", "none")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
 	req.Header.Set("Sec-Fetch-User", "?1")
 	req.Header.Set("Cache-Control", "max-age=0")
 

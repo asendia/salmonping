@@ -8,7 +8,7 @@ import (
 	"github.com/asendia/salmonping/db"
 )
 
-func routePing(w http.ResponseWriter, r *http.Request) {
+func pingHandler(w http.ResponseWriter, r *http.Request) {
 	// Check API key
 	apiKey := r.Header.Get("X-API-Key")
 	if apiKey != os.Getenv("API_KEY") {
@@ -43,7 +43,6 @@ func routePing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	queries := db.New(tx)
-
 	err = fetchListings(ctx, queries)
 	if err != nil {
 		j, _ := logJson(map[string]interface{}{

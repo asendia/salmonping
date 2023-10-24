@@ -13,7 +13,7 @@ import (
 )
 
 // /api/history?page=1&start=2021-01-01&end=2021-01-31&status=closed,unknown
-func routeHistory(w http.ResponseWriter, r *http.Request) {
+func historyHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow API calls from salmonfit.com & salmonfit.id
 	origin := r.Header.Get("Origin")
 	if origin != "https://salmonfit.com" && origin != "https://salmonfit.id" && origin != "http://localhost:5173" {

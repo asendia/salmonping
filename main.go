@@ -12,9 +12,9 @@ import (
 func main() {
 	godotenv.Load()
 	log.Print("starting server...")
-	http.HandleFunc("/api/ping", routePing)
-	http.HandleFunc("/api/history", routeHistory)
-	http.HandleFunc("/api/webhook/gofood", routeWebhookGofood)
+	http.HandleFunc("/api/history", historyHandler)
+	http.HandleFunc("/api/ping", pingHandler)
+	http.HandleFunc("/api/webhook/gofood", gofoodWebhookHandler)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
