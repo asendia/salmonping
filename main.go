@@ -14,6 +14,7 @@ func main() {
 	log.Print("starting server...")
 	http.HandleFunc("/api/ping", routePing)
 	http.HandleFunc("/api/history", routeHistory)
+	http.HandleFunc("/api/webhook/gofood", routeWebhookGofood)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
