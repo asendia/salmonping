@@ -74,7 +74,7 @@ gcloud run deploy salmonping --source . \
   --set-secrets API_KEY=salmonping_API_KEY:latest \
   --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
   # Uncomment if you choose to enable Gofood integration
-  # --set-secrets GOFOOD_NOTIFICATION_SECRET_KEY=salmonping_GOFOOD_NOTIFICATION_SECRET_KEY \
+  # --set-secrets GOFOOD_NOTIFICATION_SECRET_KEY=salmonping_GOFOOD_NOTIFICATION_SECRET_KEY:latest \
   # Uncomment if you choose to enable Telegram alert
   # --set-secrets TELEGRAM_BOT_TOKEN=salmonping_TELEGRAM_BOT_TOKEN:latest \
   # --set-secrets TELEGRAM_CHAT_ID=salmonping_TELEGRAM_CHAT_ID:latest \
