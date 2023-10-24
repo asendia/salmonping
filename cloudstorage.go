@@ -7,14 +7,12 @@ import (
 	"cloud.google.com/go/storage"
 )
 
-func writeToCloudStorage(bucketName string, onjectName string, body []byte) {
+func writeToCloudStorage(bucketName string, objectName string, body []byte) {
 	// Create a new Google Cloud Storage client
 	client, err := storage.NewClient(context.Background())
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
-
-	objectName := "your-object-name"
 
 	// Get a handle to the bucket
 	bucket := client.Bucket(bucketName)
