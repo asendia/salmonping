@@ -69,7 +69,7 @@ gcloud run deploy salmonping --source . \
   --max-instances 5 \
   --memory 128Mi \
   --min-instances 0 \
-  --region=asia-southeast1 \
+  --region=asia-southeast2 \
   --service-account SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com \
   --set-secrets API_KEY=salmonping_API_KEY:latest \
   --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
@@ -83,13 +83,10 @@ gcloud run deploy salmonping --source . \
   --update-labels service=salmonping
 
 # Create a google cloud schedulers
-API_KEY="PUT_THE_API_KEY_HERE"
-ENDPOINT_URL="PUT_THE_ENDPOINT_URL_HERE"
-
-gcloud scheduler jobs create http salmonping_ping --schedule="1,9,19,29,39,49,59 * * * *" --location="asia-southeast1" --time-zone="Asia/Jakarta" --uri=$ENDPOINT_URL --http-method=GET --headers="X-API-Key=$API_KEY"
+gcloud scheduler jobs create http salmonping_ping --schedule="1,9,19,29,39,49,59 * * * *" --location="asia-southeast2" --time-zone="Asia/Jakarta" --uri=ENDPOINT_URL --http-method=GET --headers="X-API-Key=API_KEY"
 
 # Create a cloud storage to debug html
-gsutil mb -l ASIA-SOUTHEAST1 gs://YOUR_BUCKET_NAME/
+gsutil mb -l asia-southeast2 gs://YOUR_BUCKET_NAME/
 gsutil lifecycle set gcs-lifecycle-config.json gs://YOUR_BUCKET_NAME/
 # Verify
 gsutil lifecycle get gs://YOUR_BUCKET_NAME/

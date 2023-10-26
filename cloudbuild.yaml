@@ -21,7 +21,7 @@ steps:
           --max-instances 5 \
           --memory 128Mi \
           --min-instances 0 \
-          --region=asia-southeast1 \
+          --region=asia-southeast2 \
           --service-account salmonping@salmonping.iam.gserviceaccount.com \
           --set-secrets API_KEY=salmonping_API_KEY:latest \
           --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
