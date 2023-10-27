@@ -31,11 +31,11 @@ func getPingAnomalies(schedules []db.SelectOnlineListingSchedulesRow, pings []db
 			continue
 		}
 
-		if isBetweenTime(p[0].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
+		if !isBetweenTime(p[0].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
 			continue
 		}
 
-		isFirstClosed := p[0].Status == "closed" && (len(p) == 1 || (len(p) > 1 && !isBetweenTime(p[1].CreatedAt.Time, row.OpeningTime, row.ClosingTime)))
+		isFirstClosed := p[0].Status == "closed" && (len(p) <= 1 || !isBetweenTime(p[1].CreatedAt.Time, row.OpeningTime, row.ClosingTime))
 		isSwitchingToClosed := p[0].Status == "closed" && len(p) > 1 && p[1].Status != "closed"
 		if isFirstClosed || isSwitchingToClosed {
 			anomalies = append(anomalies, p[0])

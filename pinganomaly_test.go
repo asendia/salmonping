@@ -62,7 +62,7 @@ func TestGetPingAnomalies(t *testing.T) {
 			},
 		},
 		{
-			name:      "anomalies: (1) Gofood: Resto A & C closed first ping",
+			name:      "anomalies: Gofood: Resto A & C closed first ping",
 			schedules: schedules,
 			pings: []db.SelectOnlineListingPingsRow{
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
@@ -75,6 +75,23 @@ func TestGetPingAnomalies(t *testing.T) {
 			expected: []db.SelectOnlineListingPingsRow{
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "closed", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+			},
+		},
+		{
+			name:      "anomalies: Gofood: Resto C unknown 3 times in a row",
+			schedules: schedules,
+			pings: []db.SelectOnlineListingPingsRow{
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_55, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_55, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-c"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_30, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_30, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-c"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "open", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "closed", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-c"},
+			},
+			expected: []db.SelectOnlineListingPingsRow{
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_05, Valid: true}, Status: "closed", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_55, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-c"},
 			},
 		},
 		{
@@ -146,6 +163,25 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "open", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "open", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "open", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
+			},
+			expected: []db.SelectOnlineListingPingsRow{},
+		},
+		{
+			name:      "no anomalies: unkown outside operation shcedule",
+			schedules: schedules,
+			pings: []db.SelectOnlineListingPingsRow{
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today20_05, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today20_05, Valid: true}, Status: "unknown", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today20_05, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today20_05, Valid: true}, Status: "unknown", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_55, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_55, Valid: true}, Status: "unknown", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_55, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_55, Valid: true}, Status: "unknown", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "open", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "unknown", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_30, Valid: true}, Status: "unknown", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
 			expected: []db.SelectOnlineListingPingsRow{},
 		},
