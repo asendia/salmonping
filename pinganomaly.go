@@ -12,14 +12,13 @@ import (
 func getPingAnomalies(schedules []db.SelectOnlineListingSchedulesRow, pings []db.SelectOnlineListingPingsRow) []db.SelectOnlineListingPingsRow {
 	var anomalies []db.SelectOnlineListingPingsRow
 	// Get current and previous ping status for each online listing id/name
-	currentListingPingMap := make(map[string]db.SelectOnlineListingPingsRow)
-	previousListingPingMap := make(map[string]db.SelectOnlineListingPingsRow)
+	pingMap := make(map[string][]db.SelectOnlineListingPingsRow)
 	for _, row := range pings {
 		// Check if row.Name key does not exist in currentListingPingMap
-		if _, ok := currentListingPingMap[row.Name]; !ok {
-			currentListingPingMap[row.Name] = row
-		} else if _, ok := previousListingPingMap[row.Name]; !ok {
-			previousListingPingMap[row.Name] = row
+		if _, ok := pingMap[row.Name]; !ok {
+			pingMap[row.Name] = []db.SelectOnlineListingPingsRow{row}
+		} else {
+			pingMap[row.Name] = append(pingMap[row.Name], row)
 		}
 	}
 
@@ -27,28 +26,40 @@ func getPingAnomalies(schedules []db.SelectOnlineListingSchedulesRow, pings []db
 	// If different, send message to Telegram
 	for _, row := range schedules {
 		// Check if row.Name key exists in currentListingPingMap
-		current, isCurrentFound := currentListingPingMap[row.Name]
-		if !isCurrentFound {
+		p, ok := pingMap[row.Name]
+		if !ok || p[0].Status == "open" {
 			continue
 		}
-		microsSinceMidnight := toMicrosSinceMidnight(current.CreatedAt.Time)
 
-		// Check if current ping is within schedule
-		if microsSinceMidnight < row.OpeningTime.Microseconds || microsSinceMidnight > row.ClosingTime.Microseconds {
+		if isBetweenTime(p[0].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
 			continue
 		}
-		// Check if row.Name key exists in previousListingPingMap
-		previous, isPreviousFound := previousListingPingMap[row.Name]
-		// Check if first ping within schedule or current ping status is different from previous ping status
-		if isPreviousFound && current.Status == previous.Status {
+
+		isFirstClosed := p[0].Status == "closed" && (len(p) == 1 || (len(p) > 1 && !isBetweenTime(p[1].CreatedAt.Time, row.OpeningTime, row.ClosingTime)))
+		isSwitchingToClosed := p[0].Status == "closed" && len(p) > 1 && p[1].Status != "closed"
+		if isFirstClosed || isSwitchingToClosed {
+			anomalies = append(anomalies, p[0])
 			continue
 		}
-		if current.Status == "open" {
-			continue
+
+		unknownCombo := 0
+		for i := 0; i < len(p); i++ {
+			if p[i].Status == "unknown" {
+				unknownCombo++
+			} else {
+				break
+			}
 		}
-		anomalies = append(anomalies, current)
+		if unknownCombo == 3 {
+			anomalies = append(anomalies, p[0])
+		}
 	}
 	return anomalies
+}
+
+func isBetweenTime(t time.Time, start pgtype.Time, end pgtype.Time) bool {
+	microsSinceMidnight := toMicrosSinceMidnight(t)
+	return microsSinceMidnight >= start.Microseconds && microsSinceMidnight <= end.Microseconds
 }
 
 func getTodaySchedules(ctx context.Context, queries *db.Queries) ([]db.SelectOnlineListingSchedulesRow, error) {
