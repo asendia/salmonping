@@ -99,6 +99,21 @@ func TestGetPingAnomalies(t *testing.T) {
 			},
 		},
 		{
+			name:      "anomalies: closed outside operational hours, unknown several times then closed",
+			schedules: schedules,
+			pings: []db.SelectOnlineListingPingsRow{
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_41, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_31, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_21, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_01, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+			},
+			expected: []db.SelectOnlineListingPingsRow{
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_41, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+			},
+		},
+		{
 			name:      "no anomalies: open on first ping",
 			schedules: schedules,
 			pings: []db.SelectOnlineListingPingsRow{
@@ -152,7 +167,7 @@ func TestGetPingAnomalies(t *testing.T) {
 			expected: []db.SelectOnlineListingPingsRow{},
 		},
 		{
-			name:      "no anomalies: closed outside operation shcedule",
+			name:      "no anomalies: closed outside operational hours",
 			schedules: schedules,
 			pings: []db.SelectOnlineListingPingsRow{
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today20_11, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
@@ -171,7 +186,20 @@ func TestGetPingAnomalies(t *testing.T) {
 			expected: []db.SelectOnlineListingPingsRow{},
 		},
 		{
-			name:      "no anomalies: unkown outside operation shcedule",
+			name:      "no anomalies: known to be closed during operational hours, unknown several times then closed again",
+			schedules: schedules,
+			pings: []db.SelectOnlineListingPingsRow{
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_41, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_31, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_21, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_01, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+			},
+			expected: []db.SelectOnlineListingPingsRow{},
+		},
+		{
+			name:      "no anomalies: unkown outside operational hours",
 			schedules: schedules,
 			pings: []db.SelectOnlineListingPingsRow{
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today20_11, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},

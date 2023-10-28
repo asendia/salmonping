@@ -22,29 +22,39 @@ func getPingAnomalies(schedules []db.SelectOnlineListingSchedulesRow, pings []db
 		}
 	}
 
-	// Check if current ping status is different from previous ping status
-	// If different, send message to Telegram
 	for _, row := range schedules {
 		// Check if row.Name key exists in currentListingPingMap
 		p, ok := pingMap[row.Name]
-		if !ok || p[0].Status == "open" {
+		if !ok || p[0].Status == "open" || !isBetweenTime(p[0].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
 			continue
 		}
 
-		if !isBetweenTime(p[0].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
-			continue
+		// Alert if within operational hours, status is changed from open to closed
+		// while ignoring unknown statuses during operational hours
+		isClosedAnomaly := false
+		if p[0].Status == "closed" {
+			isClosedAnomaly = true
+			for i := 1; i < len(p); i++ {
+				if !isBetweenTime(p[i].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
+					break
+				}
+				if p[i].Status == "closed" {
+					isClosedAnomaly = false
+					break
+				} else if p[i].Status == "open" {
+					break
+				}
+			}
 		}
-
-		isFirstClosed := p[0].Status == "closed" && (len(p) <= 1 || !isBetweenTime(p[1].CreatedAt.Time, row.OpeningTime, row.ClosingTime))
-		isSwitchingToClosed := p[0].Status == "closed" && len(p) > 1 && p[1].Status != "closed"
-		if isFirstClosed || isSwitchingToClosed {
+		if isClosedAnomaly {
 			anomalies = append(anomalies, p[0])
 			continue
 		}
 
+		// Alert if unknown 3 times in a row during operational hours
 		unknownCombo := 0
 		for i := 0; i < len(p); i++ {
-			if p[i].Status == "unknown" {
+			if p[i].Status == "unknown" && isBetweenTime(p[i].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
 				unknownCombo++
 			} else {
 				break
