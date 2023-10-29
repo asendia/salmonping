@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS online_listing (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   created_at timestamp with time zone DEFAULT now(),
-  name text UNIQUE NOT NULL,
+  name text NOT NULL,
   platform text NOT NULL,
   url text NOT NULL,
   PRIMARY KEY (id)

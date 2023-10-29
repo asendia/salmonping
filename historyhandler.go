@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// /api/history?page=1&start=2021-01-01&end=2021-01-31&status=closed,unknown
+// /api/history?page=1&start=2021-01-01&end=2021-01-31&status=closed,unknown&platform=gofood,grabfood&name=Kebon%20Jeruk,Sudirman
 func historyHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow API calls from salmonfit.com & salmonfit.id
 	origin := r.Header.Get("Origin")
@@ -58,6 +58,8 @@ func historyHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(j))
 		return
 	}
+
+	// Query string params
 	queries := db.New(tx)
 	pageStr := r.URL.Query().Get("page")
 	page, err := strconv.Atoi(pageStr)
@@ -110,13 +112,27 @@ func historyHandler(w http.ResponseWriter, r *http.Request) {
 		status = "open,closed,unknown"
 	}
 	statuses := strings.Split(status, ",")
+	platform := r.URL.Query().Get("platform")
+	// Split platform by ","
+	if platform == "" {
+		platform = "gofood,grabfood"
+	}
+	platforms := strings.Split(platform, ",")
+	name := r.URL.Query().Get("name")
+	// Split name by ","
+	if name == "" {
+		name = "Haji Nawi,Kebon Jeruk,Sudirman"
+	}
+	names := strings.Split(name, ",")
 
 	pgStartDate := pgtype.Timestamptz{Time: startDate, Valid: true}
 	pgEndDate := pgtype.Timestamptz{Time: endDate, Valid: true}
 	listingPings, err := queries.SelectOnlineListingPings(ctx, db.SelectOnlineListingPingsParams{
 		EndDate:   pgEndDate,
 		Limit:     limit,
+		Names:     names,
 		Offset:    offset,
+		Platforms: platforms,
 		StartDate: pgStartDate,
 		Statuses:  statuses,
 	})

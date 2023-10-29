@@ -160,7 +160,9 @@ ON
 WHERE
     sp.created_at >= $3
     AND sp.created_at < $4
-    AND sp.status = ANY($5::text[])
+    AND ol.name = ANY($5::text[])
+    AND ol.platform = ANY($6::text[])
+    AND sp.status = ANY($7::text[])
 ORDER BY sp.created_at DESC
 LIMIT $1
 OFFSET $2
@@ -171,6 +173,8 @@ type SelectOnlineListingPingsParams struct {
 	Offset    int32              `json:"offset"`
 	StartDate pgtype.Timestamptz `json:"start_date"`
 	EndDate   pgtype.Timestamptz `json:"end_date"`
+	Names     []string           `json:"names"`
+	Platforms []string           `json:"platforms"`
 	Statuses  []string           `json:"statuses"`
 }
 
@@ -190,6 +194,8 @@ func (q *Queries) SelectOnlineListingPings(ctx context.Context, arg SelectOnline
 		arg.Offset,
 		arg.StartDate,
 		arg.EndDate,
+		arg.Names,
+		arg.Platforms,
 		arg.Statuses,
 	)
 	if err != nil {
