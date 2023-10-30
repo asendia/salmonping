@@ -3,18 +3,26 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
 func main() {
 	godotenv.Load()
 	log.Print("starting server...")
-	http.HandleFunc("/api/history", historyHandler)
-	http.HandleFunc("/api/ping", pingHandler)
-	http.HandleFunc("/api/webhook/gofood", gofoodWebhookHandler)
+	r := gin.Default()
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{"https://salmonfit.com", "https://salmonfit.id", "http://localhost:5173"}
+	r.GET("/api/history", cors.New(corsConfig), historyHandler)
+
+	apiKeyAuthMiddleware := APIKeyAuthMiddleware(os.Getenv("API_KEY"))
+	r.GET("/api/ping", apiKeyAuthMiddleware, pingHandler)
+
+	gofoodSignatureMiddleware := GofoodSignatureMiddleware(os.Getenv("GOFOOD_NOTIFICATION_SECRET_KEY"))
+	r.POST("/api/webhook/gofood", gofoodSignatureMiddleware, gofoodWebhookHandler)
 
 	// Determine port for HTTP service.
 	port := os.Getenv("PORT")
@@ -23,9 +31,7 @@ func main() {
 		log.Printf("defaulting to port %s", port)
 	}
 
-	// Start HTTP server.
-	log.Printf("listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,7 +17,7 @@ func TestVerifyGofoodSignature(t *testing.T) {
 		t.Error(err)
 	}
 	signature := hmacSignMessage(msg, []byte(os.Getenv("GOFOOD_NOTIFICATION_SECRET_KEY")))
-	err = verifyGofoodSignature(msg, signature)
+	err = verifyGofoodSignature(msg, signature, os.Getenv("GOFOOD_NOTIFICATION_SECRET_KEY"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -36,7 +37,8 @@ func TestParseBodyAsWebhookPayload(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		p, err := parseBodyAsGofoodWebhookPayload(msg)
+		var p GofoodWebhookPayload
+		err = json.Unmarshal(msg, &p)
 		if err != nil {
 			t.Error(err)
 		}

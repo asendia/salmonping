@@ -1,13 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 )
 
-func verifyGofoodSignature(msg []byte, signature string) error {
-	secretKey := os.Getenv("GOFOOD_NOTIFICATION_SECRET_KEY")
+func verifyGofoodSignature(msg []byte, signature string, secretKey string) error {
 	if secretKey == "" {
 		return nil
 	}
@@ -22,17 +19,7 @@ func verifyGofoodSignature(msg []byte, signature string) error {
 	return nil
 }
 
-func parseBodyAsGofoodWebhookPayload(body []byte) (GofoodWebhookPayload, error) {
-	var payload GofoodWebhookPayload
-	err := json.Unmarshal(body, &payload)
-	if err != nil {
-		return payload, err
-	}
-	return payload, nil
-}
-
 // Generated using ChatGPT-4
-
 type GofoodWebhookPayload struct {
 	Header GofoodWebhookHeader `json:"header"`
 	Body   GofoodWebhookBody   `json:"body"`

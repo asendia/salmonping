@@ -71,6 +71,7 @@ gcloud run deploy salmonping --source . \
   --min-instances 0 \
   --region=asia-southeast2 \
   --service-account SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com \
+  --set-env-vars GIN_MODE=release \
   --set-secrets API_KEY=salmonping_API_KEY:latest \
   --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
   # Uncomment if you choose to enable Gofood integration

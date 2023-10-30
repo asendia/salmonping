@@ -1,28 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/asendia/salmonping/db"
+	"github.com/gin-gonic/gin"
 )
 
-func pingHandler(w http.ResponseWriter, r *http.Request) {
-	// Check API key
-	apiKey := r.Header.Get("X-API-Key")
-	if apiKey != os.Getenv("API_KEY") {
-		j, _ := logJson(map[string]interface{}{
-			"level":   "warning",
-			"message": "Invalid API key",
-		})
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(j))
-		return
-	}
-
-	ctx := r.Context()
+func pingHandler(c *gin.Context) {
+	ctx := c.Request.Context()
 	tx, conn, _, message, err := prepareDBConn(ctx)
 	if conn != nil {
 		defer conn.Close(ctx)
@@ -32,27 +18,25 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 		defer tx.Commit(ctx)
 	}
 	if err != nil {
-		j, _ := logJson(map[string]interface{}{
+		log := map[string]interface{}{
 			"level":   "error",
 			"error":   err.Error(),
 			"message": message,
-		})
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(j))
+		}
+		logJson(log)
+		c.JSON(http.StatusInternalServerError, gin.H(log))
 		return
 	}
 	queries := db.New(tx)
 	err = fetchListings(ctx, queries)
 	if err != nil {
-		j, _ := logJson(map[string]interface{}{
+		log := map[string]interface{}{
 			"level":   "error",
 			"error":   err.Error(),
 			"message": "Error fetching listings",
-		})
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, string(j))
+		}
+		logJson(log)
+		c.JSON(http.StatusInternalServerError, gin.H(log))
 		return
 	}
 
@@ -65,6 +49,7 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{"message": "ok"}`)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "ok",
+	})
 }

@@ -23,6 +23,7 @@ steps:
           --min-instances 0 \
           --region=asia-southeast2 \
           --service-account salmonping@salmonping.iam.gserviceaccount.com \
+          --set-env-vars GIN_MODE=release \
           --set-secrets API_KEY=salmonping_API_KEY:latest \
           --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
           --set-secrets GOFOOD_NOTIFICATION_SECRET_KEY=salmonping_GOFOOD_NOTIFICATION_SECRET_KEY:latest \
