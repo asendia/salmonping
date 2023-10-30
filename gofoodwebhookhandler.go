@@ -6,28 +6,40 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// historyHandler godoc
+//
+// @Summary		Show salmon ping history
+// @Description	get ping history based on query string params
+// @Tags		ping
+// @Accept		json
+// @Produce		json
+// @Security	GofoodSignature
+// @Param		request	body	GofoodWebhookPayload	true	"Webhook Payload sent by Gofood server"
+// @Success		200	{object}	DefaultResponse
+// @Failure		400	{object}	DefaultErrorResponse
+// @Router		webhook/gofood	[post]
 func gofoodWebhookHandler(c *gin.Context) {
 	var payload GofoodWebhookPayload
 	err := c.BindJSON(&payload)
 	if err != nil {
-		log := map[string]interface{}{
-			"error":   err.Error(),
-			"level":   "error",
-			"message": "Error parsing body",
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: "Error parsing body",
 		}
-		logJson(log)
-		c.JSON(http.StatusBadRequest, gin.H(log))
+		logJson(log.JSON())
+		c.JSON(http.StatusBadRequest, log)
 		return
 	}
-	log := map[string]interface{}{
-		"payload": payload,
-		"headers": c.Request.Header,
-		"level":   "info",
-		"message": "Gofood Webhook received",
+	log := DefaultErrorResponse{
+		Header:  c.Request.Header,
+		Level:   "info",
+		Message: "Gofood Webhook received",
+		Payload: payload,
 	}
-	logJson(log)
+	logJson(log.JSON())
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "ok",
+	c.JSON(http.StatusOK, DefaultResponse{
+		Message: "ok",
 	})
 }

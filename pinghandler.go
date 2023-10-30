@@ -7,6 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// pingHandler godoc
+//
+// @Summary		Ping and scrape online listings
+// @Description	this endpoint is called by cloud scheduler
+// @Tags		ping
+// @Accept		json
+// @Produce		json
+// @Security	ApiKeyAuth
+// @Success		200	{object}	DefaultResponse
+// @Failure		401	{object}	DefaultErrorResponse
+// @Failure		500	{object}	DefaultErrorResponse
+// @Router		/ping [get]
 func pingHandler(c *gin.Context) {
 	ctx := c.Request.Context()
 	tx, conn, _, message, err := prepareDBConn(ctx)
@@ -18,38 +30,39 @@ func pingHandler(c *gin.Context) {
 		defer tx.Commit(ctx)
 	}
 	if err != nil {
-		log := map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": message,
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: message,
 		}
-		logJson(log)
-		c.JSON(http.StatusInternalServerError, gin.H(log))
+		logJson(log.JSON())
+		c.JSON(http.StatusInternalServerError, log)
 		return
 	}
 	queries := db.New(tx)
 	err = fetchListings(ctx, queries)
 	if err != nil {
-		log := map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": "Error fetching listings",
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: "Error fetching listings",
 		}
-		logJson(log)
-		c.JSON(http.StatusInternalServerError, gin.H(log))
+		logJson(log.JSON())
+		c.JSON(http.StatusInternalServerError, log)
 		return
 	}
 
 	err = sendAlerts(ctx, queries)
 	if err != nil {
-		logJson(map[string]interface{}{
-			"level":   "warning",
-			"error":   err.Error(),
-			"message": "Failed to send Telegram alert",
-		})
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: "Error sending alerts",
+		}
+		logJson(log.JSON())
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "ok",
+	c.JSON(http.StatusOK, DefaultResponse{
+		Message: "ok",
 	})
 }

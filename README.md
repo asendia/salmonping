@@ -4,7 +4,7 @@ Online listing status checker by Salmon Fit
 ## Development
 ### Prerequisites
 - [Go](go) 1.7+, but I use 1.21.3
-- [Sqlx](https://docs.sqlc.dev/en/latest/overview/install.html) for development
+- [Sqlc](https://docs.sqlc.dev/en/latest/overview/install.html) for development
 
 ### Setup
 ```sh
@@ -36,6 +36,13 @@ curl -H "X-API-Key: api_key" http://localhost:8080/api/ping
 2. Create a group chat
 3. Invite your bot into the group chat
 4. Run `curl https://api.telegram.org/bot[TELEGRAM_BOT_TOKEN]/getUpdates` to get the chat_id, store it as env "TELEGRAM_CHAT_ID". If it returns empty you can try removing the bot from group chat & add it again.
+
+### Swagger (Optional)
+Install https://github.com/swaggo/gin-swagger#usage
+```sh
+swag init --parseDependency
+# Doc should be accessible on http://localhost:8080/swagger/index.html
+```
 
 ## Deployment
 

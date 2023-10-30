@@ -1,0 +1,470 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Online listing status checker by Salmon Fit.",
+        "title": "Salmon Ping API",
+        "contact": {
+            "name": "Salmon Ping",
+            "url": "https://salmonfit.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/history": {
+            "get": {
+                "description": "get ping history based on query string params",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ping"
+                ],
+                "summary": "Show salmon ping history",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"2023-10-28\"",
+                        "description": "Start Date (inclusive)",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "\"2023-10-31\"",
+                        "description": "End Date (inclusive)",
+                        "name": "end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "Haji Nawi,Kebon Jeruk,Sudirman",
+                        "description": "Names (comma spearated)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "gofood,grabfood",
+                        "description": "Platforms (comma spearated)",
+                        "name": "platform",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "open,closed,unknown",
+                        "description": "Statuses (comma spearated)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.HistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "this endpoint is called by cloud scheduler",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ping"
+                ],
+                "summary": "Ping and scrape online listings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/webhook/gofood": {
+            "post": {
+                "security": [
+                    {
+                        "GofoodSignature": []
+                    }
+                ],
+                "description": "get ping history based on query string params",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ping"
+                ],
+                "summary": "Show salmon ping history",
+                "parameters": [
+                    {
+                        "description": "Webhook Payload sent by Gofood server",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.GofoodWebhookPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "db.SelectOnlineListingPingsRow": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "online_listing_id": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "salmon_ping_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.Header": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.DefaultErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "header": {
+                    "$ref": "#/definitions/http.Header"
+                },
+                "level": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "payload": {},
+                "query": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.DefaultResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.GofoodCustomer": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.GofoodDriver": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.GofoodOrder": {
+            "type": "object",
+            "properties": {
+                "applied_promotions": {
+                    "description": "Assuming promotions are strings; adjust if needed",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "cutlery_requested": {
+                    "description": "Use pointer for nullable bool",
+                    "type": "boolean"
+                },
+                "order_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.GofoodOrderItem"
+                    }
+                },
+                "order_number": {
+                    "type": "string"
+                },
+                "order_total": {
+                    "type": "number"
+                },
+                "pin": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "takeaway_charges": {
+                    "type": "number"
+                }
+            }
+        },
+        "main.GofoodOrderItem": {
+            "type": "object",
+            "properties": {
+                "external_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.GofoodVariant"
+                    }
+                }
+            }
+        },
+        "main.GofoodOutlet": {
+            "type": "object",
+            "properties": {
+                "external_outlet_id": {
+                    "description": "Use pointer for nullable string",
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.GofoodVariant": {
+            "type": "object",
+            "properties": {
+                "external_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.GofoodWebhookBody": {
+            "type": "object",
+            "properties": {
+                "customer": {
+                    "$ref": "#/definitions/main.GofoodCustomer"
+                },
+                "driver": {
+                    "$ref": "#/definitions/main.GofoodDriver"
+                },
+                "order": {
+                    "$ref": "#/definitions/main.GofoodOrder"
+                },
+                "outlet": {
+                    "$ref": "#/definitions/main.GofoodOutlet"
+                },
+                "service_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.GofoodWebhookHeader": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "event_name": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "main.GofoodWebhookPayload": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "$ref": "#/definitions/main.GofoodWebhookBody"
+                },
+                "header": {
+                    "$ref": "#/definitions/main.GofoodWebhookHeader"
+                }
+            }
+        },
+        "main.HistoryResponse": {
+            "type": "object",
+            "properties": {
+                "listing_pings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.SelectOnlineListingPingsRow"
+                    }
+                }
+            }
+        },
+        "pgtype.InfinityModifier": {
+            "type": "integer",
+            "enum": [
+                1,
+                0,
+                -1
+            ],
+            "x-enum-varnames": [
+                "Infinity",
+                "Finite",
+                "NegativeInfinity"
+            ]
+        },
+        "pgtype.Timestamptz": {
+            "type": "object",
+            "properties": {
+                "infinityModifier": {
+                    "$ref": "#/definitions/pgtype.InfinityModifier"
+                },
+                "time": {
+                    "type": "string"
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Static API key for authentication",
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        },
+        "GofoodSignature": {
+            "description": "HMAC sha256 signature based on content body and secret key",
+            "type": "apiKey",
+            "name": "X-Go-Signature",
+            "in": "header"
+        }
+    },
+    "externalDocs": {
+        "description": "OpenAPI",
+        "url": "/swagger/index.html"
+    }
+}

@@ -1,0 +1,311 @@
+basePath: /api
+definitions:
+  db.SelectOnlineListingPingsRow:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      name:
+        type: string
+      online_listing_id:
+        type: string
+      platform:
+        type: string
+      salmon_ping_id:
+        type: string
+      status:
+        type: string
+      url:
+        type: string
+    type: object
+  http.Header:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
+  main.DefaultErrorResponse:
+    properties:
+      error:
+        type: string
+      header:
+        $ref: '#/definitions/http.Header'
+      level:
+        type: string
+      message:
+        type: string
+      payload: {}
+      query:
+        type: string
+    type: object
+  main.DefaultResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  main.GofoodCustomer:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  main.GofoodDriver:
+    properties:
+      name:
+        type: string
+    type: object
+  main.GofoodOrder:
+    properties:
+      applied_promotions:
+        description: Assuming promotions are strings; adjust if needed
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      currency:
+        type: string
+      cutlery_requested:
+        description: Use pointer for nullable bool
+        type: boolean
+      order_items:
+        items:
+          $ref: '#/definitions/main.GofoodOrderItem'
+        type: array
+      order_number:
+        type: string
+      order_total:
+        type: number
+      pin:
+        type: string
+      status:
+        type: string
+      takeaway_charges:
+        type: number
+    type: object
+  main.GofoodOrderItem:
+    properties:
+      external_id:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      notes:
+        type: string
+      price:
+        type: number
+      quantity:
+        type: integer
+      variants:
+        items:
+          $ref: '#/definitions/main.GofoodVariant'
+        type: array
+    type: object
+  main.GofoodOutlet:
+    properties:
+      external_outlet_id:
+        description: Use pointer for nullable string
+        type: string
+      id:
+        type: string
+    type: object
+  main.GofoodVariant:
+    properties:
+      external_id:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  main.GofoodWebhookBody:
+    properties:
+      customer:
+        $ref: '#/definitions/main.GofoodCustomer'
+      driver:
+        $ref: '#/definitions/main.GofoodDriver'
+      order:
+        $ref: '#/definitions/main.GofoodOrder'
+      outlet:
+        $ref: '#/definitions/main.GofoodOutlet'
+      service_type:
+        type: string
+    type: object
+  main.GofoodWebhookHeader:
+    properties:
+      event_id:
+        type: string
+      event_name:
+        type: string
+      timestamp:
+        type: string
+      version:
+        type: integer
+    type: object
+  main.GofoodWebhookPayload:
+    properties:
+      body:
+        $ref: '#/definitions/main.GofoodWebhookBody'
+      header:
+        $ref: '#/definitions/main.GofoodWebhookHeader'
+    type: object
+  main.HistoryResponse:
+    properties:
+      listing_pings:
+        items:
+          $ref: '#/definitions/db.SelectOnlineListingPingsRow'
+        type: array
+    type: object
+  pgtype.InfinityModifier:
+    enum:
+    - 1
+    - 0
+    - -1
+    type: integer
+    x-enum-varnames:
+    - Infinity
+    - Finite
+    - NegativeInfinity
+  pgtype.Timestamptz:
+    properties:
+      infinityModifier:
+        $ref: '#/definitions/pgtype.InfinityModifier'
+      time:
+        type: string
+      valid:
+        type: boolean
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: /swagger/index.html
+info:
+  contact:
+    name: Salmon Ping
+    url: https://salmonfit.com
+  description: Online listing status checker by Salmon Fit.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Salmon Ping API
+  version: "1.0"
+paths:
+  /history:
+    get:
+      consumes:
+      - application/json
+      description: get ping history based on query string params
+      parameters:
+      - default: 1
+        description: Page
+        in: query
+        name: page
+        type: integer
+      - description: Start Date (inclusive)
+        example: '"2023-10-28"'
+        in: query
+        name: start
+        type: string
+      - description: End Date (inclusive)
+        example: '"2023-10-31"'
+        in: query
+        name: end
+        type: string
+      - default: Haji Nawi,Kebon Jeruk,Sudirman
+        description: Names (comma spearated)
+        in: query
+        name: name
+        type: string
+      - default: gofood,grabfood
+        description: Platforms (comma spearated)
+        in: query
+        name: platform
+        type: string
+      - default: open,closed,unknown
+        description: Statuses (comma spearated)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.HistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+      summary: Show salmon ping history
+      tags:
+      - ping
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint is called by cloud scheduler
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.DefaultResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Ping and scrape online listings
+      tags:
+      - ping
+  /webhook/gofood:
+    post:
+      consumes:
+      - application/json
+      description: get ping history based on query string params
+      parameters:
+      - description: Webhook Payload sent by Gofood server
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.GofoodWebhookPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.DefaultResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+      security:
+      - GofoodSignature: []
+      summary: Show salmon ping history
+      tags:
+      - ping
+securityDefinitions:
+  ApiKeyAuth:
+    description: Static API key for authentication
+    in: header
+    name: X-API-Key
+    type: apiKey
+  GofoodSignature:
+    description: HMAC sha256 signature based on content body and secret key
+    in: header
+    name: X-Go-Signature
+    type: apiKey
+swagger: "2.0"

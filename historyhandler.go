@@ -10,7 +10,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// /api/history?page=1&start=2021-01-01&end=2021-01-31&status=closed,unknown&platform=gofood,grabfood&name=Kebon%20Jeruk,Sudirman
+// historyHandler godoc
+//
+// @Summary		Show salmon ping history
+// @Description	get ping history based on query string params
+// @Tags		ping
+// @Accept		json
+// @Produce		json
+// @Param		page		query		int		false	"Page"							default(1)
+// @Param		start		query		string	false	"Start Date (inclusive)"		example("2023-10-28")
+// @Param		end			query		string	false	"End Date (inclusive)"			example("2023-10-31")
+// @Param		name		query		string	false	"Names (comma spearated)"		default(Haji Nawi,Kebon Jeruk,Sudirman)
+// @Param		platform	query		string	false	"Platforms (comma spearated)"	default(gofood,grabfood)
+// @Param		status		query		string	false	"Statuses (comma spearated)"	default(open,closed,unknown)
+// @Success		200			{object}	HistoryResponse
+// @Failure		400			{object}	DefaultErrorResponse
+// @Failure		500			{object}	DefaultErrorResponse
+// @Router		/history	[get]
 func historyHandler(c *gin.Context) {
 	// Prepare db connection
 	ctx := c.Request.Context()
@@ -23,26 +39,26 @@ func historyHandler(c *gin.Context) {
 		defer tx.Rollback(ctx)
 	}
 	if err != nil {
-		log := map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": message,
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: message,
 		}
-		logJson(log)
-		c.JSON(http.StatusInternalServerError, gin.H(log))
+		logJson(log.JSON())
+		c.JSON(http.StatusInternalServerError, log)
 		return
 	}
 
 	var payload HistoryPayload
 	if err := c.ShouldBindQuery(&payload); err != nil {
-		log := map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": "Error binding payload",
-			"query":   c.Request.URL.RawQuery,
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: "Error binding payload",
+			Query:   c.Request.URL.RawQuery,
 		}
-		logJson(log)
-		c.JSON(http.StatusBadRequest, gin.H(log))
+		logJson(log.JSON())
+		c.JSON(http.StatusBadRequest, log)
 		return
 	}
 
@@ -79,17 +95,17 @@ func historyHandler(c *gin.Context) {
 		Statuses:  strings.Split(payload.Status, ","),
 	})
 	if err != nil {
-		log := map[string]interface{}{
-			"level":   "error",
-			"error":   err.Error(),
-			"message": "Error selecting listing pings",
+		log := DefaultErrorResponse{
+			Error:   err.Error(),
+			Level:   "error",
+			Message: "Error selecting listing pings",
 		}
-		logJson(log)
-		c.JSON(http.StatusInternalServerError, gin.H(log))
+		logJson(log.JSON())
+		c.JSON(http.StatusInternalServerError, log)
 		return
 	}
-	c.JSON(http.StatusOK, map[string]interface{}{
-		"listing_pings": listingPings,
+	c.JSON(http.StatusOK, HistoryResponse{
+		ListingPings: listingPings,
 	})
 }
 
@@ -100,4 +116,8 @@ type HistoryPayload struct {
 	Platform  string `form:"platform"`
 	StartDate string `form:"start"`
 	Status    string `form:"status"`
+}
+
+type HistoryResponse struct {
+	ListingPings []db.SelectOnlineListingPingsRow `json:"listing_pings"`
 }
