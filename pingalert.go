@@ -57,7 +57,7 @@ func createTextMessage(anomalies []db.SelectOnlineListingPingsRow) string {
 		// If different, send message to Telegram
 		for num, row := range anomalies {
 			// Check if row.Name key exists in currentListingPingMap
-			text += fmt.Sprintf("%d. %s [%s](%s)\n", num+1, storeStatusToEmoji(row.Status), row.Name, row.Url)
+			text += fmt.Sprintf("%d. %s [%s - %s](%s)\n", num+1, storeStatusToEmoji(row.Status), row.Name, row.Platform, row.Url)
 		}
 	}
 	text += "\nsalmonfit.com/status"

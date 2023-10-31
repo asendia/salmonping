@@ -15,16 +15,16 @@ func getPingAnomalies(schedules []db.SelectOnlineListingSchedulesRow, pings []db
 	pingMap := make(map[string][]db.SelectOnlineListingPingsRow)
 	for _, row := range pings {
 		// Check if row.Name key does not exist in currentListingPingMap
-		if _, ok := pingMap[row.Name]; !ok {
-			pingMap[row.Name] = []db.SelectOnlineListingPingsRow{row}
+		if _, ok := pingMap[row.Url]; !ok {
+			pingMap[row.Url] = []db.SelectOnlineListingPingsRow{row}
 		} else {
-			pingMap[row.Name] = append(pingMap[row.Name], row)
+			pingMap[row.Url] = append(pingMap[row.Url], row)
 		}
 	}
 
 	for _, row := range schedules {
 		// Check if row.Name key exists in currentListingPingMap
-		p, ok := pingMap[row.Name]
+		p, ok := pingMap[row.Url]
 		if !ok || p[0].Status == "open" || !isBetweenTime(p[0].CreatedAt.Time, row.OpeningTime, row.ClosingTime) {
 			continue
 		}

@@ -69,14 +69,14 @@ func TestGetPingAnomalies(t *testing.T) {
 			pings: []db.SelectOnlineListingPingsRow{
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "open", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
-				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "closed", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "closed", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-c"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "open", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "closed", Name: "Gofood: Resto B", Platform: "gofood", Url: "https://gofood.com/resto-b"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "closed", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
 			expected: []db.SelectOnlineListingPingsRow{
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
-				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "closed", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
+				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "closed", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-c"},
 			},
 		},
 		{
