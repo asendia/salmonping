@@ -7,9 +7,8 @@ import (
 )
 
 // historyHandler godoc
-//
-// @Summary		Show salmon ping history
-// @Description	get ping history based on query string params
+// @Summary		Receive webhook from Gofood
+// @Description	log if there is gofood events such as new order, driver otw, driver cancel, etc
 // @Tags		ping
 // @Accept		json
 // @Produce		json
@@ -17,7 +16,7 @@ import (
 // @Param		request	body	GofoodWebhookPayload	true	"Webhook Payload sent by Gofood server"
 // @Success		200	{object}	DefaultResponse
 // @Failure		400	{object}	DefaultErrorResponse
-// @Router		webhook/gofood	[post]
+// @Router		/webhook/gofood	[post]
 func gofoodWebhookHandler(c *gin.Context) {
 	var payload GofoodWebhookPayload
 	err := c.BindJSON(&payload)

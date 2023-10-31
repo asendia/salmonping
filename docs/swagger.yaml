@@ -176,9 +176,6 @@ definitions:
       valid:
         type: boolean
     type: object
-externalDocs:
-  description: OpenAPI
-  url: /swagger/index.html
 info:
   contact:
     name: Salmon Ping
@@ -273,7 +270,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: get ping history based on query string params
+      description: log if there is gofood events such as new order, driver otw, driver
+        cancel, etc
       parameters:
       - description: Webhook Payload sent by Gofood server
         in: body
@@ -294,7 +292,7 @@ paths:
             $ref: '#/definitions/main.DefaultErrorResponse'
       security:
       - GofoodSignature: []
-      summary: Show salmon ping history
+      summary: Receive webhook from Gofood
       tags:
       - ping
 securityDefinitions:

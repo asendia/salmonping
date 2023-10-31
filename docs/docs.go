@@ -148,7 +148,7 @@ const docTemplate = `{
                         "GofoodSignature": []
                     }
                 ],
-                "description": "get ping history based on query string params",
+                "description": "log if there is gofood events such as new order, driver otw, driver cancel, etc",
                 "consumes": [
                     "application/json"
                 ],
@@ -158,7 +158,7 @@ const docTemplate = `{
                 "tags": [
                     "ping"
                 ],
-                "summary": "Show salmon ping history",
+                "summary": "Receive webhook from Gofood",
                 "parameters": [
                     {
                         "description": "Webhook Payload sent by Gofood server",
@@ -469,10 +469,6 @@ const docTemplate = `{
             "name": "X-Go-Signature",
             "in": "header"
         }
-    },
-    "externalDocs": {
-        "description": "OpenAPI",
-        "url": "/swagger/index.html"
     }
 }`
 
