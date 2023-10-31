@@ -91,7 +91,7 @@ gcloud run deploy salmonping --source . \
   --update-labels service=salmonping
 
 # Create a google cloud schedulers
-gcloud scheduler jobs create http salmonping_ping --schedule="1,11,21,31,41,51,59 9-20 * * 1-6" --location="asia-southeast2" --time-zone="Asia/Jakarta" --uri=ENDPOINT_URL --http-method=GET --headers="X-API-Key=API_KEY"
+gcloud scheduler jobs create http salmonping_ping --schedule="2,11,21,31,41,51,59 9-20 * * 1-6" --location="asia-southeast2" --time-zone="Asia/Jakarta" --uri=ENDPOINT_URL --http-method=GET --headers="X-API-Key=API_KEY"
 
 # Create a cloud storage to debug html
 gsutil mb -l asia-southeast2 gs://YOUR_BUCKET_NAME/
