@@ -1,14 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"reflect"
 	"testing"
 	"time"
 
 	"github.com/asendia/salmonping/db"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPingAnomalies(t *testing.T) {
@@ -126,7 +125,7 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "closed", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "closed", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
-			expected: []db.SelectOnlineListingPingsRow{},
+			expected: nil,
 		},
 		{
 			name:      "no anomalies: closed 2x in a row",
@@ -145,7 +144,7 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "open", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "open", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
-			expected: []db.SelectOnlineListingPingsRow{},
+			expected: nil,
 		},
 		{
 			name:      "no anomalies: always open",
@@ -164,7 +163,7 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "open", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_11, Valid: true}, Status: "open", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
-			expected: []db.SelectOnlineListingPingsRow{},
+			expected: nil,
 		},
 		{
 			name:      "no anomalies: closed outside operational hours",
@@ -183,7 +182,7 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_51, Valid: true}, Status: "open", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_51, Valid: true}, Status: "open", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
-			expected: []db.SelectOnlineListingPingsRow{},
+			expected: nil,
 		},
 		{
 			name:      "no anomalies: known to be closed during operational hours, unknown several times then closed again",
@@ -196,7 +195,7 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today10_01, Valid: true}, Status: "closed", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today09_59, Valid: true}, Status: "unknown", Name: "Gofood: Resto A", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 			},
-			expected: []db.SelectOnlineListingPingsRow{},
+			expected: nil,
 		},
 		{
 			name:      "no anomalies: unkown outside operational hours",
@@ -215,7 +214,7 @@ func TestGetPingAnomalies(t *testing.T) {
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_51, Valid: true}, Status: "unknown", Name: "Gofood: Resto C", Platform: "gofood", Url: "https://gofood.com/resto-a"},
 				{OnlineListingID: uuid1, CreatedAt: pgtype.Timestamptz{Time: today19_51, Valid: true}, Status: "unknown", Name: "Grabfood: Resto A", Platform: "gofood", Url: "https://grabfood.com/resto-a"},
 			},
-			expected: []db.SelectOnlineListingPingsRow{},
+			expected: nil,
 		},
 	}
 
@@ -223,21 +222,7 @@ func TestGetPingAnomalies(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := getPingAnomalies(tc.schedules, tc.pings)
-			if len(tc.expected) == 0 && len(actual) == 0 {
-				return
-			}
-			if !reflect.DeepEqual(actual, tc.expected) {
-				// Convert json to string
-				actualJson, err := json.Marshal(actual)
-				if err != nil {
-					t.Fatal(err)
-				}
-				expectedJson, err := json.Marshal(tc.expected)
-				if err != nil {
-					t.Fatal(err)
-				}
-				t.Errorf("%s: expected %s\n\nBut got %s", tc.name, expectedJson, actualJson)
-			}
+			assert.Equal(t, actual, tc.expected)
 		})
 	}
 }
