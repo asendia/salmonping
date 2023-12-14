@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"math/rand"
 	"net/http"
 	"path"
 	"strconv"
@@ -16,8 +15,6 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 	if err != nil {
 		return err
 	}
-	rand.Shuffle(len(userAgents), func(i, j int) { userAgents[i], userAgents[j] = userAgents[j], userAgents[i] })
-
 	grabCounter := 0
 	for _, ol := range listings {
 		logJson(map[string]interface{}{
@@ -33,7 +30,7 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 		if ol.Platform == "gofood" {
 			status, header, body, err = getGofoodStatus(ol.Url)
 		} else if ol.Platform == "grabfood" {
-			status, header, body, err = getGrabfoodStatus(ol.Url, userAgents[grabCounter%len(userAgents)])
+			status, header, body, err = getGrabfoodStatus(ol.Url)
 			grabCounter++
 		} else {
 			logJson(map[string]interface{}{

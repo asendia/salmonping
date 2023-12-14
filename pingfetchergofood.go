@@ -2,26 +2,53 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"io"
 	"net/http"
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/andybalholm/brotli"
 )
 
 func getGofoodStatus(url string) (string, http.Header, []byte, error) {
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	emulateBrowser(req)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return "", nil, nil, err
 	}
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", resp.Header, nil, err
+
+	var body []byte
+	encoding := resp.Header.Get("Content-Encoding")
+	switch encoding {
+	case "br":
+		bodyReader := brotli.NewReader(resp.Body)
+		body, err = io.ReadAll(bodyReader)
+	case "gzip":
+		bodyReader, readerErr := gzip.NewReader(resp.Body)
+		if readerErr == nil {
+			body, err = io.ReadAll(bodyReader)
+		} else {
+			err = readerErr
+		}
+	default:
+		body, err = io.ReadAll(resp.Body)
 	}
-	if bytes.Contains(body, []byte("<span><p>Buka</p></span>")) {
+	if err != nil {
+		return "", resp.Header, body, err
+	}
+
+	if bytes.Contains(body, []byte(">Buka")) {
 		return "open", resp.Header, body, nil
-	} else if bytes.Contains(body, []byte("<span><p>Tutup</p></span>")) {
+	} else if bytes.Contains(body, []byte(">Tutup")) {
 		return "closed", resp.Header, body, nil
 	} else {
 		logJson(map[string]interface{}{
