@@ -14,7 +14,8 @@ steps:
     args:
       - '-c'
       - |
-        gcloud run deploy salmonping --source . \
+        gcloud builds submit --tag asia-southeast2-docker.pkg.dev/salmonping/salmonping/app:latest
+        gcloud run deploy salmonping --image asia-southeast2-docker.pkg.dev/salmonping/salmonping/app:latest \
           --allow-unauthenticated \
           --concurrency 16 \
           --cpu 1 \
