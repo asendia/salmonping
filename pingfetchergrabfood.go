@@ -9,17 +9,17 @@ import (
 	"github.com/andybalholm/brotli"
 )
 
-func getGrabfoodStatus(url string) (string, http.Header, []byte, error) {
+func getGrabfoodStatus(url string) (string, http.Header, int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", nil, nil, err
+		return "", nil, 0, nil, err
 	}
 	emulateBrowser(req)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", resp.Header, nil, err
+		return "", resp.Header, 0, nil, err
 	}
 	defer resp.Body.Close()
 
@@ -40,14 +40,16 @@ func getGrabfoodStatus(url string) (string, http.Header, []byte, error) {
 		body, err = io.ReadAll(resp.Body)
 	}
 	if err != nil {
-		return "", resp.Header, body, err
+		return "", resp.Header, resp.StatusCode, body, err
+	}
+	if resp.StatusCode >= 400 {
+		return "unknown", resp.Header, resp.StatusCode, body, nil
 	}
 
 	if bytes.Contains(body, []byte("Tutup</div></div>")) {
-		return "closed", resp.Header, body, nil
+		return "closed", resp.Header, resp.StatusCode, body, nil
 	} else if bytes.Contains(body, []byte("Jam Buka</label>")) {
-		return "open", resp.Header, body, nil
-	} else {
-		return "unknown", resp.Header, body, nil
+		return "open", resp.Header, resp.StatusCode, body, nil
 	}
+	return "unknown", resp.Header, resp.StatusCode, body, nil
 }

@@ -25,12 +25,13 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 		})
 		var status string
 		var header http.Header
+		var code int
 		var body []byte
 		var err error
 		if ol.Platform == "gofood" {
-			status, header, body, err = getGofoodStatus(ol.Url)
+			status, header, code, body, err = getGofoodStatus(ol.Url)
 		} else if ol.Platform == "grabfood" {
-			status, header, body, err = getGrabfoodStatus(ol.Url)
+			status, header, code, body, err = getGrabfoodStatus(ol.Url)
 			grabCounter++
 		} else {
 			logJson(map[string]interface{}{
@@ -53,6 +54,7 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 
 		logJson(map[string]interface{}{
 			"header":  header,
+			"code":    code,
 			"level":   "info",
 			"listing": ol.Name,
 			"status":  status,

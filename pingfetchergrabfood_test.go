@@ -9,11 +9,12 @@ func TestGetGrabfoodStatusIntegration(t *testing.T) {
 
 	unknownCombo := 0
 	for i := 0; i < 3; i++ {
-		status, _, _, err := getGrabfoodStatus(url)
+		status, _, code, _, err := getGrabfoodStatus(url)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
 		if status == "unknown" {
+			t.Logf("Unknown status, code: %v", code)
 			unknownCombo++
 		}
 	}

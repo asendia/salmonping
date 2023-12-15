@@ -50,14 +50,14 @@ func createTextMessage(anomalies []db.SelectOnlineListingPingsRow) string {
 	}
 	if len(anomalies) == 1 {
 		row := anomalies[0]
-		text = fmt.Sprintf("%s [%s](%s) is %s\n", storeStatusToEmoji(row.Status), row.Name, row.Url, row.Status)
+		text = fmt.Sprintf("%s [%s - %s](%s) is %s\n", storeStatusToEmoji(row.Status), row.Name, row.Platform, row.Url, row.Status)
 	} else {
-		text = "🚨🚨 Anomalies detected 🚨🚨\n\n"
+		text = ""
 		// Check if current ping status is different from previous ping status
 		// If different, send message to Telegram
 		for num, row := range anomalies {
 			// Check if row.Name key exists in currentListingPingMap
-			text += fmt.Sprintf("%d. %s [%s - %s](%s)\n", num+1, storeStatusToEmoji(row.Status), row.Name, row.Platform, row.Url)
+			text += fmt.Sprintf("%d. %s [%s - %s](%s) is %s\n", num+1, storeStatusToEmoji(row.Status), row.Name, row.Platform, row.Url, row.Status)
 		}
 	}
 	text += "\nsalmonfit.com/status"
