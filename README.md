@@ -63,8 +63,8 @@ echo -n "PUT_GOFOOD_NOTIFICATION_SECRET_KEY" | \
 
 # Create a service account and allow access to secret manager & cloud storage
 gcloud iam service-accounts create SERVICE_ACCOUNT_NAME
-gcloud projects add-iam-policy-binding SERVICE_ACCOUNT_NAME \
-  --member='serviceAccount:SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com' \
+gcloud projects add-iam-policy-binding PROJECT_ID \
+  --member='serviceAccount:SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com' \
   --role='roles/secretmanager.secretAccessor' \
   --role='roles/storage.objectCreator'
 
@@ -77,7 +77,7 @@ gcloud run deploy salmonping --source . \
   --memory 128Mi \
   --min-instances 0 \
   --region=asia-southeast2 \
-  --service-account SERVICE_ACCOUNT_NAME@PROJECT_NAME.iam.gserviceaccount.com \
+  --service-account SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com \
   --set-env-vars GIN_MODE=release \
   --set-secrets API_KEY=salmonping_API_KEY:latest \
   --set-secrets DATABASE_URL=salmonping_DATABASE_URL:latest \
