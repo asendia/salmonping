@@ -5,6 +5,7 @@ import (
 )
 
 func TestGetGrabfoodStatusIntegration(t *testing.T) {
+	t.Skip("Temporarily skipping this since grab website blocks GCP IP")
 	url := "https://food.grab.com/id/id/restaurant/salmon-fit-apartemen-menara-kebun-jeruk-delivery/6-C2XUWAX3PEU1JT"
 
 	unknownCombo := 0
