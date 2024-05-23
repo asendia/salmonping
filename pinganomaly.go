@@ -96,7 +96,7 @@ func getTodayPings(ctx context.Context, queries *db.Queries) ([]db.SelectOnlineL
 	listingPings, err := queries.SelectOnlineListingPings(ctx, db.SelectOnlineListingPingsParams{
 		EndDate:   pgtype.Timestamptz{Time: tomorrow, Valid: true},
 		Limit:     100,
-		Names:     []string{"Haji Nawi", "Kebon Jeruk", "Sudirman"},
+		Names:     []string{"Haji Nawi", "Kebon Jeruk", "Sudirman", "Tanjung Duren"},
 		Offset:    0,
 		Platforms: []string{"gofood", "grabfood"},
 		StartDate: pgtype.Timestamptz{Time: today, Valid: true},

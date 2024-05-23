@@ -20,7 +20,7 @@ import (
 // @Param		page		query		int		false	"Page"							default(1)
 // @Param		start		query		string	false	"Start Date (inclusive)"		example("2023-10-28")
 // @Param		end			query		string	false	"End Date (inclusive)"			example("2023-10-31")
-// @Param		name		query		string	false	"Names (comma spearated)"		default(Haji Nawi,Kebon Jeruk,Sudirman)
+// @Param		name		query		string	false	"Names (comma spearated)"		default(Haji Nawi,Kebon Jeruk,Sudirman,Tanjung Duren)
 // @Param		platform	query		string	false	"Platforms (comma spearated)"	default(gofood,grabfood)
 // @Param		status		query		string	false	"Statuses (comma spearated)"	default(open,closed,unknown)
 // @Success		200			{object}	HistoryResponse
@@ -76,7 +76,7 @@ func historyHandler(c *gin.Context) {
 	pgStartDate := pgtype.Timestamptz{Time: startDate, Valid: true}
 	pgEndDate := pgtype.Timestamptz{Time: endDate, Valid: true}
 	if payload.Name == "" {
-		payload.Name = "Haji Nawi,Kebon Jeruk,Sudirman"
+		payload.Name = "Haji Nawi,Kebon Jeruk,Sudirman,Tanjung Duren"
 	}
 	if payload.Platform == "" {
 		payload.Platform = "gofood,grabfood"

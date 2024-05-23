@@ -208,7 +208,7 @@ paths:
         in: query
         name: end
         type: string
-      - default: Haji Nawi,Kebon Jeruk,Sudirman
+      - default: Haji Nawi,Kebon Jeruk,Sudirman,Tanjung Duren
         description: Names (comma spearated)
         in: query
         name: name

@@ -59,7 +59,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "Haji Nawi,Kebon Jeruk,Sudirman",
+                        "default": "Haji Nawi,Kebon Jeruk,Sudirman,Tanjung Duren",
                         "description": "Names (comma spearated)",
                         "name": "name",
                         "in": "query"
