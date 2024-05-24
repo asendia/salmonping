@@ -9,11 +9,12 @@ import (
 )
 
 type OnlineListing struct {
-	ID        pgtype.UUID        `json:"id"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	Name      string             `json:"name"`
-	Platform  string             `json:"platform"`
-	Url       string             `json:"url"`
+	ID         pgtype.UUID        `json:"id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	Name       string             `json:"name"`
+	Platform   string             `json:"platform"`
+	Url        string             `json:"url"`
+	EnablePing bool               `json:"enable_ping"`
 }
 
 type SalmonPing struct {

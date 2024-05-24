@@ -54,22 +54,30 @@ const insertOnlineListing = `-- name: InsertOnlineListing :one
 INSERT INTO online_listing (
   name,
   platform,
-  url
+  url,
+  enable_ping
 ) VALUES (
   $1,
   $2,
-  $3
-) RETURNING id, created_at, name, platform, url
+  $3,
+  $4
+) RETURNING id, created_at, name, platform, url, enable_ping
 `
 
 type InsertOnlineListingParams struct {
-	Name     string `json:"name"`
-	Platform string `json:"platform"`
-	Url      string `json:"url"`
+	Name       string `json:"name"`
+	Platform   string `json:"platform"`
+	Url        string `json:"url"`
+	EnablePing bool   `json:"enable_ping"`
 }
 
 func (q *Queries) InsertOnlineListing(ctx context.Context, arg InsertOnlineListingParams) (OnlineListing, error) {
-	row := q.db.QueryRow(ctx, insertOnlineListing, arg.Name, arg.Platform, arg.Url)
+	row := q.db.QueryRow(ctx, insertOnlineListing,
+		arg.Name,
+		arg.Platform,
+		arg.Url,
+		arg.EnablePing,
+	)
 	var i OnlineListing
 	err := row.Scan(
 		&i.ID,
@@ -77,6 +85,7 @@ func (q *Queries) InsertOnlineListing(ctx context.Context, arg InsertOnlineListi
 		&i.Name,
 		&i.Platform,
 		&i.Url,
+		&i.EnablePing,
 	)
 	return i, err
 }
@@ -114,7 +123,8 @@ SELECT
     ol.created_at,
     ol.name,
     ol.platform,
-    ol.url
+    ol.url,
+    ol.enable_ping
 FROM online_listing ol
 `
 
@@ -133,6 +143,7 @@ func (q *Queries) SelectListings(ctx context.Context) ([]OnlineListing, error) {
 			&i.Name,
 			&i.Platform,
 			&i.Url,
+			&i.EnablePing,
 		); err != nil {
 			return nil, err
 		}

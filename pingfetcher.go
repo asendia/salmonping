@@ -15,8 +15,16 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 	if err != nil {
 		return err
 	}
-	grabCounter := 0
 	for _, ol := range listings {
+		if !ol.EnablePing {
+			logJson(map[string]interface{}{
+				"level":   "info",
+				"message": "Skipping a listing because ping is disabled",
+				"listing": ol.Name,
+				"url":     ol.Url,
+			})
+			continue
+		}
 		logJson(map[string]interface{}{
 			"level":   "info",
 			"message": "Scraping a listing",
@@ -32,7 +40,6 @@ func fetchListings(ctx context.Context, queries *db.Queries) error {
 			status, header, code, body, err = getGofoodStatus(ol.Url)
 		} else if ol.Platform == "grabfood" {
 			status, header, code, body, err = getGrabfoodStatus(ol.Url)
-			grabCounter++
 		} else {
 			logJson(map[string]interface{}{
 				"level":   "error",

@@ -2,11 +2,13 @@
 INSERT INTO online_listing (
   name,
   platform,
-  url
+  url,
+  enable_ping
 ) VALUES (
   $1,
   $2,
-  $3
+  $3,
+  $4
 ) RETURNING *;
 
 -- name: InsertListing :one
@@ -37,7 +39,8 @@ SELECT
     ol.created_at,
     ol.name,
     ol.platform,
-    ol.url
+    ol.url,
+    ol.enable_ping
 FROM online_listing ol;
 
 -- name: SelectOnlineListingSchedules :many

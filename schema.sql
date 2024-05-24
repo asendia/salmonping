@@ -32,3 +32,6 @@ CREATE INDEX IF NOT EXISTS salmon_ping_created_at_idx ON salmon_ping (created_at
 CREATE INDEX IF NOT EXISTS salmon_ping_online_listing_id_idx ON salmon_ping (online_listing_id);
 CREATE INDEX IF NOT EXISTS salmon_ping_status_idx ON salmon_ping (status);
 CREATE INDEX IF NOT EXISTS salmon_ping_history_filters_idx ON salmon_ping (created_at DESC, status, online_listing_id);
+
+ALTER TABLE online_listing
+  ADD COLUMN IF NOT EXISTS enable_ping boolean NOT NULL DEFAULT true;
