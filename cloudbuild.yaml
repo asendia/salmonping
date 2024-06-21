@@ -31,7 +31,7 @@ steps:
           --set-secrets TELEGRAM_BOT_TOKEN=salmonping_TELEGRAM_BOT_TOKEN:latest \
           --set-secrets TELEGRAM_CHAT_ID=salmonping_TELEGRAM_CHAT_ID:latest \
           --tag=main \
-          --timeout 15s \
+          --timeout 30s \
           --update-labels service=salmonping
 options:
   logging: CLOUD_LOGGING_ONLY
