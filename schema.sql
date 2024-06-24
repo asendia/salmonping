@@ -35,3 +35,6 @@ CREATE INDEX IF NOT EXISTS salmon_ping_history_filters_idx ON salmon_ping (creat
 
 ALTER TABLE online_listing
   ADD COLUMN IF NOT EXISTS enable_ping boolean NOT NULL DEFAULT true;
+
+ALTER TABLE online_listing
+  ADD CONSTRAINT url_unique UNIQUE (url);
