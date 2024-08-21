@@ -15,6 +15,7 @@ type OnlineListing struct {
 	Platform   string             `json:"platform"`
 	Url        string             `json:"url"`
 	EnablePing bool               `json:"enable_ping"`
+	Status     string             `json:"status"`
 }
 
 type SalmonPing struct {

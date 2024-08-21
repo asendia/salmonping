@@ -61,7 +61,7 @@ INSERT INTO online_listing (
   $2,
   $3,
   $4
-) RETURNING id, created_at, name, platform, url, enable_ping
+) RETURNING id, created_at, name, platform, url, enable_ping, status
 `
 
 type InsertOnlineListingParams struct {
@@ -86,6 +86,7 @@ func (q *Queries) InsertOnlineListing(ctx context.Context, arg InsertOnlineListi
 		&i.Platform,
 		&i.Url,
 		&i.EnablePing,
+		&i.Status,
 	)
 	return i, err
 }
@@ -123,25 +124,54 @@ SELECT
     ol.created_at,
     ol.name,
     ol.platform,
+    ol.status,
     ol.url,
     ol.enable_ping
 FROM online_listing ol
+WHERE
+    ol.enable_ping = ANY($1::boolean[])
+    AND (COALESCE(array_length($2::text[], 1), 0) = 0 OR ol.name = ANY($2::text[]))
+    AND (COALESCE(array_length($3::text[], 1), 0) = 0 OR ol.platform = ANY($3::text[]))
+    AND (COALESCE(array_length($4::text[], 1), 0) = 0 OR ol.status = ANY($4::text[]))
 `
 
-func (q *Queries) SelectListings(ctx context.Context) ([]OnlineListing, error) {
-	rows, err := q.db.Query(ctx, selectListings)
+type SelectListingsParams struct {
+	EnablePing []bool   `json:"enable_ping"`
+	Names      []string `json:"names"`
+	Platforms  []string `json:"platforms"`
+	Statuses   []string `json:"statuses"`
+}
+
+type SelectListingsRow struct {
+	ID         pgtype.UUID        `json:"id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	Name       string             `json:"name"`
+	Platform   string             `json:"platform"`
+	Status     string             `json:"status"`
+	Url        string             `json:"url"`
+	EnablePing bool               `json:"enable_ping"`
+}
+
+func (q *Queries) SelectListings(ctx context.Context, arg SelectListingsParams) ([]SelectListingsRow, error) {
+	rows, err := q.db.Query(ctx, selectListings,
+		arg.EnablePing,
+		arg.Names,
+		arg.Platforms,
+		arg.Statuses,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []OnlineListing
+	var items []SelectListingsRow
 	for rows.Next() {
-		var i OnlineListing
+		var i SelectListingsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.CreatedAt,
 			&i.Name,
 			&i.Platform,
+			&i.Status,
 			&i.Url,
 			&i.EnablePing,
 		); err != nil {
@@ -171,9 +201,9 @@ ON
 WHERE
     sp.created_at >= $3
     AND sp.created_at < $4
-    AND ol.name = ANY($5::text[])
-    AND ol.platform = ANY($6::text[])
-    AND sp.status = ANY($7::text[])
+    AND (COALESCE(array_length($5::text[], 1), 0) = 0 OR ol.name = ANY($5::text[]))
+    AND (COALESCE(array_length($6::text[], 1), 0) = 0 OR ol.platform = ANY($6::text[]))
+    AND (COALESCE(array_length($7::text[], 1), 0) = 0 OR sp.status = ANY($7::text[]))
 ORDER BY sp.created_at DESC
 LIMIT $1
 OFFSET $2

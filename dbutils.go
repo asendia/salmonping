@@ -41,3 +41,13 @@ func toMicrosSinceMidnight(t time.Time) int64 {
 		int64(sec)*int64(time.Second/time.Microsecond) +
 		int64(t.Nanosecond())/int64(time.Microsecond)
 }
+
+func filterEmptyStrings(input []string) []string {
+	var result []string
+	for _, str := range input {
+		if str != "" {
+			result = append(result, str)
+		}
+	}
+	return result
+}

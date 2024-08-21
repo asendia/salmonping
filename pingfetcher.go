@@ -11,7 +11,12 @@ import (
 )
 
 func fetchListings(ctx context.Context, queries *db.Queries) error {
-	listings, err := queries.SelectListings(ctx)
+	listings, err := queries.SelectListings(ctx, db.SelectListingsParams{
+		EnablePing: []bool{true},
+		Names:      []string{},
+		Platforms:  []string{},
+		Statuses:   []string{},
+	})
 	if err != nil {
 		return err
 	}

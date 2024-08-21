@@ -1,5 +1,22 @@
 basePath: /api
 definitions:
+  db.SelectListingsRow:
+    properties:
+      created_at:
+        $ref: '#/definitions/pgtype.Timestamptz'
+      enable_ping:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      platform:
+        type: string
+      status:
+        type: string
+      url:
+        type: string
+    type: object
   db.SelectOnlineListingPingsRow:
     properties:
       created_at:
@@ -157,6 +174,13 @@ definitions:
           $ref: '#/definitions/db.SelectOnlineListingPingsRow'
         type: array
     type: object
+  main.StoresResponse:
+    properties:
+      stores:
+        items:
+          $ref: '#/definitions/db.SelectListingsRow'
+        type: array
+    type: object
   pgtype.InfinityModifier:
     enum:
     - 1
@@ -208,18 +232,15 @@ paths:
         in: query
         name: end
         type: string
-      - default: Haji Nawi,Kebon Jeruk,Sudirman,Tanjung Duren
-        description: Names (comma spearated)
+      - description: Names (comma spearated)
         in: query
         name: name
         type: string
-      - default: gofood,grabfood
-        description: Platforms (comma spearated)
+      - description: Platforms (comma spearated)
         in: query
         name: platform
         type: string
-      - default: open,closed,unknown
-        description: Statuses (comma spearated)
+      - description: Statuses (comma spearated)
         in: query
         name: status
         type: string
@@ -264,6 +285,46 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Ping and scrape online listings
+      tags:
+      - ping
+  /stores:
+    get:
+      consumes:
+      - application/json
+      description: get list of stores based on query string params
+      parameters:
+      - description: Enable ping, true|false
+        in: query
+        name: enable_ping
+        type: string
+      - description: Names (comma spearated)
+        in: query
+        name: name
+        type: string
+      - description: Platforms (comma spearated)
+        in: query
+        name: platform
+        type: string
+      - description: Statuses (comma spearated)
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.StoresResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.DefaultErrorResponse'
+      summary: Get list of stores
       tags:
       - ping
   /webhook/gofood:

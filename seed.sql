@@ -18,12 +18,7 @@ DO $$
 DECLARE
     online_listing_id_value uuid;
 BEGIN
-    FOR online_listing_id_value IN (
-        SELECT id
-        FROM online_listing
-        WHERE platform = 'grabfood'
-        AND name IN ('Haji Nawi', 'Tanjung Duren', 'Kebon Sirih')
-    )
+    FOR online_listing_id_value IN (SELECT id FROM online_listing)
     LOOP
         -- Monday to Saturday
         FOR day_in_week IN 1..6

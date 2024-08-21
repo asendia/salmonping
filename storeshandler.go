@@ -3,31 +3,27 @@ package main
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/asendia/salmonping/db"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// historyHandler godoc
+// storesHandler godoc
 //
-// @Summary		Show salmon ping history
-// @Description	get ping history based on query string params
+// @Summary		Get list of stores
+// @Description	get list of stores based on query string params
 // @Tags		ping
 // @Accept		json
 // @Produce		json
-// @Param		page		query		int		false	"Page"							default(1)
-// @Param		start		query		string	false	"Start Date (inclusive)"		example("2023-10-28")
-// @Param		end			query		string	false	"End Date (inclusive)"			example("2023-10-31")
+// @Param		enable_ping	query		string	false	"Enable ping, true|false"
 // @Param		name		query		string	false	"Names (comma spearated)"
 // @Param		platform	query		string	false	"Platforms (comma spearated)"
 // @Param		status		query		string	false	"Statuses (comma spearated)"
-// @Success		200			{object}	HistoryResponse
+// @Success		200			{object}	StoresResponse
 // @Failure		400			{object}	DefaultErrorResponse
 // @Failure		500			{object}	DefaultErrorResponse
-// @Router		/history	[get]
-func historyHandler(c *gin.Context) {
+// @Router		/stores	[get]
+func storesHandler(c *gin.Context) {
 	// Prepare db connection
 	ctx := c.Request.Context()
 	tx, conn, _, message, err := prepareDBConn(ctx)
@@ -49,7 +45,7 @@ func historyHandler(c *gin.Context) {
 		return
 	}
 
-	var payload HistoryPayload
+	var payload StoresPayload
 	if err := c.ShouldBindQuery(&payload); err != nil {
 		log := DefaultErrorResponse{
 			Error:   err.Error(),
@@ -64,29 +60,15 @@ func historyHandler(c *gin.Context) {
 
 	// Query string params
 	queries := db.New(tx)
-	limit := int32(100)
-	if payload.Page == 0 {
-		payload.Page = 1
-	}
-	offset := (int32(payload.Page) - 1) * limit
-	startDate := parseJakartaDate(payload.StartDate, time.Now().Add(-24*7*time.Hour))
-	endDate := parseJakartaDate(payload.EndDate, time.Now())
-	// Add 1 day to endDate
-	endDate = endDate.Add(24 * time.Hour)
-	pgStartDate := pgtype.Timestamptz{Time: startDate, Valid: true}
-	pgEndDate := pgtype.Timestamptz{Time: endDate, Valid: true}
 	var names = filterEmptyStrings(strings.Split(payload.Name, ","))
 	var platforms = filterEmptyStrings(strings.Split(payload.Platform, ","))
 	var statuses = filterEmptyStrings(strings.Split(payload.Status, ","))
 
-	listingPings, err := queries.SelectOnlineListingPings(ctx, db.SelectOnlineListingPingsParams{
-		EndDate:   pgEndDate,
-		Limit:     limit,
-		Names:     names,
-		Offset:    offset,
-		Platforms: platforms,
-		StartDate: pgStartDate,
-		Statuses:  statuses,
+	stores, err := queries.SelectListings(ctx, db.SelectListingsParams{
+		EnablePing: []bool{true, false},
+		Names:      names,
+		Platforms:  platforms,
+		Statuses:   statuses,
 	})
 	if err != nil {
 		log := DefaultErrorResponse{
@@ -98,20 +80,19 @@ func historyHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, log)
 		return
 	}
-	c.JSON(http.StatusOK, HistoryResponse{
-		ListingPings: listingPings,
+	c.JSON(http.StatusOK, StoresResponse{
+		Stores: stores,
 	})
 }
 
-type HistoryPayload struct {
-	EndDate   string `form:"end"`
-	Name      string `form:"name"`
-	Page      int    `form:"page"`
-	Platform  string `form:"platform"`
-	StartDate string `form:"start"`
-	Status    string `form:"status"`
+type StoresPayload struct {
+	EnablePing string `form:"enable_ping"`
+	Name       string `form:"name"`
+	Platform   string `form:"platform"`
+	Status     string `form:"status"`
+	URL        string `form:"url"`
 }
 
-type HistoryResponse struct {
-	ListingPings []db.SelectOnlineListingPingsRow `json:"listing_pings"`
+type StoresResponse struct {
+	Stores []db.SelectListingsRow `json:"stores"`
 }

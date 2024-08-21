@@ -39,9 +39,15 @@ SELECT
     ol.created_at,
     ol.name,
     ol.platform,
+    ol.status,
     ol.url,
     ol.enable_ping
-FROM online_listing ol;
+FROM online_listing ol
+WHERE
+    ol.enable_ping = ANY(@enable_ping::boolean[])
+    AND (COALESCE(array_length(@names::text[], 1), 0) = 0 OR ol.name = ANY(@names::text[]))
+    AND (COALESCE(array_length(@platforms::text[], 1), 0) = 0 OR ol.platform = ANY(@platforms::text[]))
+    AND (COALESCE(array_length(@statuses::text[], 1), 0) = 0 OR ol.status = ANY(@statuses::text[]));
 
 -- name: SelectOnlineListingSchedules :many
 SELECT
@@ -77,9 +83,9 @@ ON
 WHERE
     sp.created_at >= @start_date
     AND sp.created_at < @end_date
-    AND ol.name = ANY(@names::text[])
-    AND ol.platform = ANY(@platforms::text[])
-    AND sp.status = ANY(@statuses::text[])
+    AND (COALESCE(array_length(@names::text[], 1), 0) = 0 OR ol.name = ANY(@names::text[]))
+    AND (COALESCE(array_length(@platforms::text[], 1), 0) = 0 OR ol.platform = ANY(@platforms::text[]))
+    AND (COALESCE(array_length(@statuses::text[], 1), 0) = 0 OR sp.status = ANY(@statuses::text[]))
 ORDER BY sp.created_at DESC
 LIMIT $1
 OFFSET $2;

@@ -59,21 +59,18 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "Haji Nawi,Kebon Jeruk,Sudirman,Tanjung Duren",
                         "description": "Names (comma spearated)",
                         "name": "name",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "default": "gofood,grabfood",
                         "description": "Platforms (comma spearated)",
                         "name": "platform",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "default": "open,closed,unknown",
                         "description": "Statuses (comma spearated)",
                         "name": "status",
                         "in": "query"
@@ -141,6 +138,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/stores": {
+            "get": {
+                "description": "get list of stores based on query string params",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ping"
+                ],
+                "summary": "Get list of stores",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Enable ping, true|false",
+                        "name": "enable_ping",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Names (comma spearated)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Platforms (comma spearated)",
+                        "name": "platform",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Statuses (comma spearated)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.StoresResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.DefaultErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/webhook/gofood": {
             "post": {
                 "security": [
@@ -188,6 +246,32 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "db.SelectListingsRow": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "$ref": "#/definitions/pgtype.Timestamptz"
+                },
+                "enable_ping": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "db.SelectOnlineListingPingsRow": {
             "type": "object",
             "properties": {
@@ -424,6 +508,17 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/db.SelectOnlineListingPingsRow"
+                    }
+                }
+            }
+        },
+        "main.StoresResponse": {
+            "type": "object",
+            "properties": {
+                "stores": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.SelectListingsRow"
                     }
                 }
             }

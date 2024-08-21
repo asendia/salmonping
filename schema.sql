@@ -38,3 +38,6 @@ ALTER TABLE online_listing
 
 ALTER TABLE online_listing
   ADD CONSTRAINT url_unique UNIQUE (url);
+
+ALTER TABLE online_listing
+  ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'unknown';

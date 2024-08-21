@@ -42,6 +42,7 @@ func main() {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"https://salmonfit.com", "https://salmonfit.id", "http://localhost:5173"}
 	r.GET("/api/history", cors.New(corsConfig), historyHandler)
+	r.GET("/api/stores", cors.New(corsConfig), storesHandler)
 
 	apiKeyAuthMiddleware := APIKeyAuthMiddleware(os.Getenv("API_KEY"))
 	r.GET("/api/ping", apiKeyAuthMiddleware, pingHandler)
