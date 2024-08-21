@@ -8,13 +8,22 @@ VALUES
     , ('Haji Nawi', 'grabfood', 'https://food.grab.com/id/id/restaurant/salmon-fit-haji-nawi-delivery/6-C4LJLRKEKAEVME')
     , ('Tanjung Duren', 'gofood', 'https://gofood.co.id/jakarta/restaurant/salmon-fit-apartemen-menara-kebon-jeruk-06f0dcc6-14f4-4092-810f-2bcc81214d23')
     , ('Tanjung Duren', 'grabfood', 'https://food.grab.com/id/id/restaurant/salmon-fit-apartemen-menara-kebun-jeruk-delivery/6-C2XUWAX3PEU1JT')
+    , ('Kebon Sirih', 'gofood', 'https://gofood.co.id/jakarta/restaurant/salmon-fit-kebon-sirih-815b2b33-584e-46d6-b12e-2d6da2f46f96')
+    , ('Kebon Sirih', 'grabfood', 'https://food.grab.com/id/id/restaurant/salmon-fit-kebon-sirih-delivery/6-C36EKGLYHB42DA')
 ON CONFLICT DO NOTHING;
+
+DELETE FROM schedule;
 
 DO $$ 
 DECLARE
     online_listing_id_value uuid;
 BEGIN
-    FOR online_listing_id_value IN (SELECT id FROM online_listing)
+    FOR online_listing_id_value IN (
+        SELECT id
+        FROM online_listing
+        WHERE platform = 'grabfood'
+        AND name IN ('Haji Nawi', 'Tanjung Duren', 'Kebon Sirih')
+    )
     LOOP
         -- Monday to Saturday
         FOR day_in_week IN 1..6
