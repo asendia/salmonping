@@ -9,6 +9,10 @@ import (
 	"github.com/andybalholm/brotli"
 )
 
+func containsProbeJS(body []byte) bool {
+	return bytes.Contains(body, []byte("probe.js"))
+}
+
 func getGofoodStatus(url string) (string, http.Header, int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -46,8 +50,15 @@ func getGofoodStatus(url string) (string, http.Header, int, []byte, error) {
 	if resp.StatusCode >= 400 {
 		return "unknown", resp.Header, resp.StatusCode, body, nil
 	}
+	// Detect WAF/bot protection challenge page (Kasada probe.js)
+	if containsProbeJS(body) {
+		return "unknown", resp.Header, resp.StatusCode, body, nil
+	}
 	if bytes.Contains(body, []byte(">Tutup")) {
 		return "closed", resp.Header, resp.StatusCode, body, nil
 	}
-	return "open", resp.Header, resp.StatusCode, body, nil
+	if bytes.Contains(body, []byte(">Buka")) {
+		return "open", resp.Header, resp.StatusCode, body, nil
+	}
+	return "unknown", resp.Header, resp.StatusCode, body, nil
 }

@@ -9,6 +9,10 @@ import (
 	"github.com/andybalholm/brotli"
 )
 
+func isGrabfoodSkeleton(body []byte) bool {
+	return bytes.Contains(body, []byte("Skeleton___")) && !bytes.Contains(body, []byte("Tutup</div>")) && !bytes.Contains(body, []byte("Jam Buka</"))
+}
+
 func getGrabfoodStatus(url string) (string, http.Header, int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -46,9 +50,12 @@ func getGrabfoodStatus(url string) (string, http.Header, int, []byte, error) {
 		return "unknown", resp.Header, resp.StatusCode, body, nil
 	}
 
-	if bytes.Contains(body, []byte("Tutup</div></div>")) {
+	// The GrabFood restaurant detail page is now client-side rendered.
+	// SSR HTML contains only skeleton loaders — no actual restaurant data.
+	// Check for rendered restaurant status text; if absent, return "unknown".
+	if bytes.Contains(body, []byte("Tutup</div>")) {
 		return "closed", resp.Header, resp.StatusCode, body, nil
-	} else if bytes.Contains(body, []byte("Jam Buka</label>")) {
+	} else if bytes.Contains(body, []byte("Jam Buka</")) {
 		return "open", resp.Header, resp.StatusCode, body, nil
 	}
 	return "unknown", resp.Header, resp.StatusCode, body, nil
